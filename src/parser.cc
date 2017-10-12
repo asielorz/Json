@@ -142,3 +142,4 @@ std::istream & operator >> (std::istream & is, json::value & val)
 	val = json::parser::parse(is);
 	return is;
 }
+

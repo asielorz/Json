@@ -88,3 +88,4 @@ namespace json
 #include "variant.inl"
 
 #endif // VARIANT_HH_INCLUDE_GUARD
+

@@ -392,3 +392,4 @@ namespace std
 #include "value.inl"
 
 #endif // VALUE_HH_INCLUDE_GUARD
+

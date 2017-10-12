@@ -24,3 +24,4 @@ namespace json
 JSON_API std::ostream & operator << (std::ostream & os, const json::value & val);
 
 #endif // WRITER_HH_INCLUDE_GUARD
+

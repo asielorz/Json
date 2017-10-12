@@ -177,3 +177,4 @@ JSON_API std::istream & operator >> (std::istream & is, json::value & val);
 #include "parser.inl"
 
 #endif // PARSER_HH_INCLUDE_GUARD
+

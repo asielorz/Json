@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "less.hh"
 
 #define JSON_API
 
@@ -24,8 +23,9 @@ namespace json
 
 	//! Map type used by all the json functions and classes
 	template <typename Key, typename Value>
-	using map = std::map<Key, Value, json::less, json::allocator<std::pair<const Key, Value>>>;
+	using map = std::map<Key, Value, std::less<>, json::allocator<std::pair<const Key, Value>>>;
 
 }
 
 #endif // CONFIG_HH_INCLUDE_GUARD
+

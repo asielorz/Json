@@ -42,3 +42,4 @@ namespace json
 #include "release.inl"
 
 #endif // !RELEASE_HH_INCLUDE_GUARD
+

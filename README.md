@@ -20,31 +20,40 @@ The code doesn't have any external dependencies appart from the C++ standard lib
 The project is self contained and can be directly copied to your project. It's composed by the files
 
   - config.hh
-	Defines the allocator type used by all the API, and the macro JSON_API which is appended to all functions and classes for DLL_IO.
+
+Defines the allocator type used by all the API, and the macro JSON_API which is appended to all functions and classes for DLL_IO.
   - parser.cc
   - parser.hh
   - parser.inl
-	Functions and classes necessary to build a json::value from a string in JSON format.
+  
+  Functions and classes necessary to build a json::value from a string in JSON format.
   - release.hh
   - release.inl
-	Some utility functions internally used by string_key.
+
+Some utility functions internally used by string_key.
   - string_key.hh
   - string_key.inl
-	String class especially designed to be used as a key of a map. Used by json::object as key of it's map. Can be used on it's own.
+
+String class especially designed to be used as a key of a map. Used by json::object as key of it's map. Can be used on it's own.
   - value.cc
   - value.hh
   - value.inl
-	Class that represents a json::value. This is, a variant type that may be a number, a string, a boolean, an ordered n-tuple of json::values, an unordered set of string-json::value pairs, or null.
+
+Class that represents a json::value. This is, a variant type that may be a number, a string, a boolean, an ordered n-tuple of json::values, an unordered set of string-json::value pairs, or null.
   - writer.cc
   - writer.hh
-	Functions to transform a json::value to a string in JSON format representing it's data.
+
+Functions to transform a json::value to a string in JSON format representing it's data.
   - mpl\algorith.hh
-	Algorithms on type lists used by the variant.
+
+Algorithms on type lists used by the variant.
   - mpl\copy_control_traits.hh
   - mpl\copy_control_traits.inl
-	Virtual table class with the copy control functions (constructor, copy and move operations and destructor) of a type, used by the variant.
+
+Virtual table class with the copy control functions (constructor, copy and move operations and destructor) of a type, used by the variant.
   - mpl\variant.hh
   - mpl\variant.inl
-	Variant class internally used by json::value. Can be used on it's own.
+
+Variant class internally used by json::value. Can be used on it's own.
 	
 No specific build process is required.

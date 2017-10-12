@@ -57,3 +57,13 @@ Virtual table class with the copy control functions (constructor, copy and move 
 Variant class internally used by json::value. Can be used on it's own.
 	
 No specific build process is required.
+
+## Other files
+
+The file tests.cc contains a main function that will automatically run several unit tests on the code. These tests cover all the behavour of all the classes and functions of the API.
+
+The file json.natvis contains native visualizers for the classes of the API in the Visual Studio debugger. It is extremely recommended to include this file in your project if you are using this json in Visual Studio, as it will make it much easier to debug.
+
+## License
+
+See the `LICENSE` file for details. In summary, Json is licensed under the MIT license, or public domain if desired and recognized in your jurisdiction.

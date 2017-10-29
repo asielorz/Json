@@ -278,9 +278,19 @@ namespace json
 			return write(val, indentation, 0);
 		}
 
-		void write(std::ostream & os, const json::value & val, const json::string & indentation)
+		json::string write(const json::object & val, const json::string & indentation)
 		{
-			os << write(val, indentation);
+			return write_object(val, indentation, 0);
+		}
+
+		std::ostream & write(std::ostream & os, const json::value & val, const json::string & indentation)
+		{
+			return os << write(val, indentation);
+		}
+
+		std::ostream & write(std::ostream & os, const json::object & val, const json::string & indentation)
+		{
+			return os << write(val, indentation);
 		}
 
 	} // namespace writer
@@ -288,7 +298,10 @@ namespace json
 
 std::ostream & operator << (std::ostream & os, const json::value & val)
 {
-	json::writer::write(os, val);
-	return os;
+	return json::writer::write(os, val);
 }
 
+std::ostream & operator << (std::ostream & os, const json::object & val)
+{
+	return json::writer::write(os, val);
+}

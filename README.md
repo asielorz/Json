@@ -62,6 +62,8 @@ No specific build process is required.
 
 The file tests.cc contains a main function that will automatically run several unit tests on the code. These tests cover all the behavour of all the classes and functions of the API.
 
+The file examples.cc contains some code showcasing basic functionality of the API.
+
 The file json.natvis contains native visualizers for the classes of the API in the Visual Studio debugger. It is extremely recommended to include this file in your project if you are using this json in Visual Studio, as it will make it much easier to debug.
 
 ## License

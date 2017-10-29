@@ -8,8 +8,9 @@ This is a library that allows easy manipulation of JSON values, as well as seria
 
 ## Documentation
 
-Documentation of the API is generated using Doxygen.
-TODO: upload and link documentation
+[Documentation of the API][doc-link] is generated using Doxygen.
+
+[doc-link]: https://lugruf.github.io/Json/docs/index.html
 
 ## Dependencies
 

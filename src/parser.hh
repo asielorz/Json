@@ -47,15 +47,16 @@ namespace json
 			{}
 		};
 
-		//! Parses the range of characters [begin, end) in json format into a sequence of lexical tokens.
-		//! Tokens will contain pointers to the source range so it's important for it to live
-		//! while the tokens are being used
+		//! Parses the range of characters [begin, end) in json format into a sequence of lexical tokens
+		//! Tokens are stored in the range starting at out. Returns one past the end of the output range
+		//! Tokens will contain pointers to the source range so it's important for it to live while
+		//! the tokens are being used.
 		//! CharForwardIterator must satisfy ForwardIterator
 		//! CharForwardIterator::value_type must be char
 		//! TokenOutputIterator must satisfy OutputIterator
 		//! TokenOutputIterator::value_type must be token<CharForwardIterator>
 		template <typename CharForwardIterator, typename TokenOutputIterator>
-		void tokenize(CharForwardIterator begin, CharForwardIterator end, TokenOutputIterator out);
+		TokenOutputIterator tokenize(CharForwardIterator begin, CharForwardIterator end, TokenOutputIterator out);
 		//! Parses the range of characters [begin, end) in json format into a sequence of lexical tokens.
 		//! Result is returned as a vector of tokens instead of storing it in the given range.
 		template <typename CharForwardIterator>

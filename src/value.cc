@@ -800,7 +800,7 @@ namespace json
 		names.reserve(members.size());
 
 		for (const auto & pair : members)
-			names.push_back(json::string{ pair.first });
+			names.push_back(json::string{ pair.first.begin(), pair.first.end(), pair.first.get_allocator() });
 
 		return names;
 	}

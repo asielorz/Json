@@ -54,7 +54,7 @@ namespace json
 		typename CharT, 
 		typename Traits = std::char_traits<CharT>, 
 		typename Allocator = json::allocator<CharT>
-	> class basic_string_key
+	> class basic_string_key : private Allocator
 	{
 	public:
 		using traits_type = Traits;
@@ -93,6 +93,9 @@ namespace json
 
 		//! Returns the allocator by copy
 		Allocator get_allocator() const;
+		//! Returns the allocator by reference
+		Allocator & get_stored_allocator() noexcept;
+		const Allocator & get_stored_allocator() const noexcept;
 
 		//! Returns an iterator to the beginning of the string
 		const_iterator begin() const noexcept;
@@ -222,7 +225,6 @@ namespace json
 
 		static constexpr size_type short_string_buffer_size = 16; //!< Size of the short string buffer;
 
-		Allocator alloc;		//!< Allocator used to allocate and deallocate dynamic memory
 		size_type str_size;		//!< Size of the string
 		const CharT * str;		//!< Pointer to the array of characters
 		union

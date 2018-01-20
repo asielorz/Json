@@ -29,14 +29,14 @@ namespace json
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(const CharT * s, const Allocator & a)
-		: alloc{ a }
+		: Allocator{ a }
 	{
 		copy_other(s, Traits::length(s));
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(const std::basic_string<CharT, Traits, Allocator> & s)
-		: alloc{ s.get_allocator() }
+		: Allocator{ s.get_allocator() }
 	{
 		copy_other(s.c_str(), s.size());
 	}
@@ -44,14 +44,14 @@ namespace json
 	template <typename CharT, typename Traits, typename Allocator>
 	template <typename OtherAllocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(const std::basic_string<CharT, Traits, OtherAllocator> & s, const Allocator & a)
-		: alloc{ a }
+		: Allocator{ a }
 	{
 		copy_other(s.c_str(), s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(std::basic_string<CharT, Traits, Allocator> && s)
-		: alloc{ s.get_allocator() }
+		: Allocator{ s.get_allocator() }
 	{
 		// If s is a short string
 		if (points_inside(s.c_str(), s))
@@ -66,7 +66,7 @@ namespace json
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(basic_static_string<CharT, Traits> s, const Allocator & a)
-		: alloc{ a }
+		: Allocator{ a }
 		, str_size{ s.size() }
 		, str{ s.c_str() }
 		, buffer_capacity{ 0 }
@@ -74,7 +74,7 @@ namespace json
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(const basic_string_key & other)
-		: alloc{ other.alloc }
+		: Allocator{ other.get_allocator() }
 		, str_size{ other.str_size }
 		, str{}
 	{
@@ -86,7 +86,7 @@ namespace json
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(basic_string_key && other)
-		: alloc{ std::move(other.alloc) }
+		: Allocator{ std::move(other.get_stored_allocator()) }
 		, str_size{ std::move(other.str_size) }
 		, str{}
 	{
@@ -110,7 +110,7 @@ namespace json
 	template <typename CharT, typename Traits, typename Allocator>
 	Allocator basic_string_key<CharT, Traits, Allocator>::get_allocator() const
 	{
-		return alloc;
+		return get_stored_allocator();
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
@@ -427,6 +427,18 @@ namespace json
 		return std::basic_string<CharT, Traits, Allocator>{ begin(), end(), get_allocator() };
 	}
 
+	template <typename CharT, typename Traits, typename Allocator>
+	Allocator & basic_string_key<CharT, Traits, Allocator>::get_stored_allocator() noexcept
+	{
+		return *this;
+	}
+
+	template <typename CharT, typename Traits, typename Allocator>
+	const Allocator & basic_string_key<CharT, Traits, Allocator>::get_stored_allocator() const noexcept
+	{
+		return *this;
+	}
+
 	//*****************************************************************************************************************
 
 	template <typename CharT, typename Traits, typename Allocator>
@@ -440,7 +452,7 @@ namespace json
 	{
 		// Free memory only if this is not a view and if this is not a short string
 		if (owns_data() && !is_short_str())
-			std::allocator_traits<Allocator>::deallocate(alloc, mutable_str(), buffer_capacity + 1);
+			std::allocator_traits<Allocator>::deallocate(get_stored_allocator(), mutable_str(), buffer_capacity + 1);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
@@ -462,7 +474,7 @@ namespace json
 		else
 		{
 			buffer_capacity = size;
-			return std::allocator_traits<Allocator>::allocate(alloc, size + 1);
+			return std::allocator_traits<Allocator>::allocate(get_stored_allocator(), size + 1);
 		}
 	}
 

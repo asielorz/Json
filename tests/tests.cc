@@ -14,7 +14,10 @@
 #include <forward_list>
 #include <chrono>
 
-std::vector<std::function<void()>> tests;
+namespace
+{
+	std::vector<std::function<void()>> tests;
+}
 
 #if _DEBUG
 #define debug_assert(expression) assert(expression)
@@ -1735,13 +1738,6 @@ TEST(a_string_key_that_is_not_a_short_string_is_a_short_empty_string_after_move)
 	debug_assert(s.empty());
 	debug_assert(s.size() == 0);
 	debug_assert(s.capacity() == 15);
-
-	debug_assert(sizeof(json::string_key) == sizeof(std::string));
-}
-
-TEST(a_string_key_and_a_std_string_of_the_same_allocator_have_the_same_size)
-{
-	debug_assert(sizeof(json::string_key) == sizeof(json::string));
 }
 
 TEST(a_string_key_with_wchar_also_implements_short_string_optimization)
@@ -1969,6 +1965,5 @@ TEST(deleteme_visualizers)
 	json::value v5 = { 4, "Foobar", false };
 	json::value v6 = { std::make_pair("hello", 4), {"foo", "bar"} };
 }
-
 
 

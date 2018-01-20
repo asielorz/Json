@@ -162,7 +162,7 @@ namespace json
 		} // namespace impl
 
 		template <typename CharForwardIterator, typename TokenOutputIterator>
-		void tokenize(CharForwardIterator begin, CharForwardIterator end, TokenOutputIterator out)
+		TokenOutputIterator tokenize(CharForwardIterator begin, CharForwardIterator end, TokenOutputIterator out)
 		{
 			static_assert(std::is_same<typename
 				std::iterator_traits<CharForwardIterator>::value_type,
@@ -187,6 +187,8 @@ namespace json
 					begin = token_end;
 				}
 			}
+
+			return out;
 		}
 
 		template <typename CharForwardIterator>

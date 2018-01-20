@@ -34,7 +34,7 @@
           <Item Name="[size]" ExcludeView="simple">str_size</Item>
           <Item Name="[capacity]" ExcludeView="simple" Condition="(void*)str == (void*)short_str_buffer">(16 / sizeof(*str)) - 1</Item>
           <Item Name="[capacity]" ExcludeView="simple" Condition="(void*)str != (void*)short_str_buffer">buffer_capacity</Item>
-          <Item Name="[allocator]" ExcludeView="simple">alloc</Item>
+          <Item Name="[allocator]" ExcludeView="simple">*this</Item>
           <ArrayItems>
               <Size>str_size</Size>
               <ValuePointer>str</ValuePointer>

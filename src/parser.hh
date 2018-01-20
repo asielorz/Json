@@ -4,7 +4,8 @@
 #include "config.hh"
 #include "value.hh" // value, value_type
 #include <stdexcept> // std::runtime_error
-#include <cassert>
+#include <cassert> // assert
+#include <iterator> // std::back_inserter
 
 namespace json
 {
@@ -51,6 +52,12 @@ namespace json
 		//! while the tokens are being used
 		//! CharForwardIterator must satisfy ForwardIterator
 		//! CharForwardIterator::value_type must be char
+		//! TokenOutputIterator must satisfy OutputIterator
+		//! TokenOutputIterator::value_type must be token<CharForwardIterator>
+		template <typename CharForwardIterator, typename TokenOutputIterator>
+		void tokenize(CharForwardIterator begin, CharForwardIterator end, TokenOutputIterator out);
+		//! Parses the range of characters [begin, end) in json format into a sequence of lexical tokens.
+		//! Result is returned as a vector of tokens instead of storing it in the given range.
 		template <typename CharForwardIterator>
 		json::vector<token<CharForwardIterator>> tokenize(CharForwardIterator begin, CharForwardIterator end);
 		//! Parses the whole string until a null character is found

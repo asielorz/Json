@@ -161,23 +161,15 @@ namespace json
 
 		} // namespace impl
 
-		template <typename CharForwardIterator>
-		json::vector<token<CharForwardIterator>> tokenize(CharForwardIterator begin, CharForwardIterator end)
+		template <typename CharForwardIterator, typename TokenOutputIterator>
+		void tokenize(CharForwardIterator begin, CharForwardIterator end, TokenOutputIterator out)
 		{
 			static_assert(std::is_same<typename
 				std::iterator_traits<CharForwardIterator>::value_type,
 				char>::value,
 				"In function tokenize CharForwardIterator must dereference to char");
-
+			
 			using namespace ::json::parser::impl;
-
-			json::vector<token<CharForwardIterator>> tokens;
-			// Pre allocate some memory to avoid frequent reallocations. The starting size is temptative,
-			// and the function may reallocate depending on data quality, but it should very rarely need
-			// more than two allocations.
-			constexpr size_t average_token_to_char_ratio = 6; // This was decided by running tests on a set of data
-			const size_t source_length = std::distance(begin, end);
-			tokens.reserve(source_length / average_token_to_char_ratio);
 
 			while (begin != end)
 			{
@@ -191,11 +183,24 @@ namespace json
 					const token_type type = determine_token_type(c);
 					const size_t length = token_length(begin, type);
 					const auto token_end = std::next(begin, length);
-					tokens.push_back({ type, begin, token_end });
+					*out++ = { type, begin, token_end };
 					begin = token_end;
 				}
 			}
+		}
 
+		template <typename CharForwardIterator>
+		json::vector<token<CharForwardIterator>> tokenize(CharForwardIterator begin, CharForwardIterator end)
+		{
+			json::vector<token<CharForwardIterator>> tokens;
+			// Pre allocate some memory to avoid frequent reallocations. The starting size is temptative,
+			// and the function may reallocate depending on data quality, but it should very rarely need
+			// more than two allocations.
+			constexpr size_t average_token_to_char_ratio = 6; // This was decided by running tests on a set of data
+			const size_t source_length = std::distance(begin, end);
+			tokens.reserve(source_length / average_token_to_char_ratio);
+
+			tokenize(begin, end, std::back_inserter(tokens));
 			return tokens;
 		}
 

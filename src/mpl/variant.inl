@@ -54,7 +54,7 @@ namespace json
 			: vtable_index(other.vtable_index)
 		{
 			if (valid())
-				vtables[vtable_index]->copy_construct(buffer, other.buffer);
+				vtables[vtable_index]->copy_construct(std::addressof(buffer), std::addressof(other.buffer));
 		}
 
 		template <typename ... Ts>
@@ -63,7 +63,7 @@ namespace json
 		{
 			other.vtable_index = npos;
 			if (valid())
-				vtables[vtable_index]->move_construct(buffer, other.buffer);
+				vtables[vtable_index]->move_construct(std::addressof(buffer), std::addressof(other.buffer));
 		}
 
 		template <typename ... Ts>
@@ -72,14 +72,14 @@ namespace json
 			if (vtable_index == other.vtable_index)
 			{
 				if (valid())
-					vtables[vtable_index]->copy_assign(buffer, other.buffer);
+					vtables[vtable_index]->copy_assign(std::addressof(buffer), std::addressof(other.buffer));
 			}
 			else
 			{
 				destroy();
 				vtable_index = other.vtable_index;
 				if (valid())
-					vtables[vtable_index]->copy_construct(buffer, other.buffer);
+					vtables[vtable_index]->copy_construct(std::addressof(buffer), std::addressof(other.buffer));
 			}
 
 			return *this;
@@ -91,14 +91,14 @@ namespace json
 			if (vtable_index == other.vtable_index)
 			{
 				if (valid())
-					vtables[vtable_index]->move_assign(buffer, other.buffer);
+					vtables[vtable_index]->move_assign(std::addressof(buffer), std::addressof(other.buffer));
 			}
 			else
 			{
 				destroy();
 				vtable_index = other.vtable_index;
 				if (valid())
-					vtables[vtable_index]->move_construct(buffer, other.buffer);
+					vtables[vtable_index]->move_construct(std::addressof(buffer), std::addressof(other.buffer));
 			}
 
 			other.vtable_index = npos;
@@ -113,7 +113,7 @@ namespace json
 
 			destroy();
 			vtable_index = find<T, value_types>::value;
-			::new (buffer) T(std::forward<Args>(args)...);
+			::new (std::addressof(buffer)) T(std::forward<Args>(args)...);
 		}
 
 		template <typename ... Ts>
@@ -121,7 +121,7 @@ namespace json
 		{
 			if (valid())
 			{
-				vtables[vtable_index]->destroy(buffer);
+				vtables[vtable_index]->destroy(std::addressof(buffer));
 				vtable_index = npos;
 			}
 		}

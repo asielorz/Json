@@ -75,11 +75,12 @@ namespace json
 
 		private:
 			static constexpr size_t buffer_size = mpl::biggest_size<value_types>::value;
+			static constexpr size_t buffer_alignment = mpl::biggest_alignment<value_types>::value;
 			//! Array with the virtual tables of the types of the variant
 			static const copy_control_traits_base * vtables[mpl::size<value_types>::value];
 
-			size_t vtable_index = npos;		  //! Index of the current type
-			char buffer[buffer_size] = { 0 }; //! Buffer where the internal object is stored
+			size_t vtable_index = npos;										//! Index of the current type
+			std::aligned_storage_t<buffer_size, buffer_alignment> buffer;	//! Buffer where the internal object is stored
 		};
 
 	} // namespace mpl

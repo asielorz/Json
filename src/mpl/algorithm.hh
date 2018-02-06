@@ -50,6 +50,26 @@ namespace json
 
 		// **************************************************************************
 
+		//! Returns the biggest alignment of a set of types
+		template <typename First, typename ... Rest>
+		struct biggest_alignment
+			: public std::integral_constant<size_t, max<alignof(First), biggest_alignment<Rest...>::value>::value>
+		{};
+
+		//! Returns the biggest alignment of a set of types. Base case for recursion
+		template <typename First>
+		struct biggest_alignment<First>
+			: public std::integral_constant<size_t, alignof(First)>
+		{};
+
+		//! Returns the biggest alignment of a set of types. Specialization for type_list
+		template <typename ... List>
+		struct biggest_alignment<type_list<List...>>
+			: public std::integral_constant<size_t, biggest_alignment<List...>::value>
+		{};
+
+		// **************************************************************************
+
 		//! True if a type is in a list of types
 		template <typename T, typename First, typename ... Rest>
 		struct contains

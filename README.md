@@ -10,7 +10,7 @@ This is a library that allows easy manipulation of JSON values, as well as seria
 
 [Documentation of the API][doc-link] is generated using Doxygen.
 
-[doc-link]: https://lugruf.github.io/Json/files.html
+[doc-link]: https://asielorz.github.io/Json/files.html
 
 ## Dependencies
 

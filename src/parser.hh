@@ -33,6 +33,8 @@ namespace json
 		template <typename CharForwardIterator>
 		struct token
 		{
+			using char_iterator_type = CharForwardIterator;
+
 			token_type type;			//!< Type of the token
 			CharForwardIterator begin;	//!< Location of the token data in the source string
 			CharForwardIterator end;	//!< End of the token data in the source string
@@ -97,6 +99,26 @@ namespace json
 		// might already have been done in a previous step of the algorithm.
 		namespace impl
 		{
+
+			//! Actual exception class thrown by tokenize and build_value. Contains additional information about
+			//! the error which is later used by parse to give a better error message
+			template <typename CharForwardIterator>
+			class detailed_syntax_error : public syntax_error
+			{
+			public:
+				detailed_syntax_error(const char * msg, CharForwardIterator pos)
+					: syntax_error{ msg }
+					, location{ pos }
+				{}
+
+				CharForwardIterator where() const noexcept
+				{
+					return location;
+				}
+
+			private:
+				CharForwardIterator location;
+			};
 
 			//! Determines the token type of a piece of source code from its first character
 			JSON_API token_type determine_token_type(char starting_char);
@@ -174,6 +196,11 @@ namespace json
 			//! Constructs a boolean value form a token that represents a boolean in the source
 			template <typename CharForwardIterator>
 			json::value parse_boolean(const token<CharForwardIterator> & t);
+
+			//! Takes the information from a syntax error and parses the source to gather information such as error row and column,
+			//! then returns a new syntax error with the gathered information
+			template <typename CharForwardIterator>
+			detailed_syntax_error<CharForwardIterator> generate_meaningful_syntax_error(const detailed_syntax_error<CharForwardIterator> & error, CharForwardIterator source_begin);
 
 		} // namespace impl
 	} // namespace parser

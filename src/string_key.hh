@@ -316,34 +316,37 @@ namespace json
 	//! Typedef for basic_string_key of char32_t
 	using u32string_key = basic_string_key<char32_t>;
 
-	inline namespace string_key_literals
+	inline namespace literals
 	{
+		inline namespace string_key_literals
+		{
 
-		//! Construct static_string from [str, str + length)
-		constexpr static_string operator "" _ss(const char * str, size_t length) noexcept;
+			//! Construct static_string from [str, str + length)
+			constexpr static_string operator "" _ss(const char * str, size_t length) noexcept;
 
-		//! Construct static_wstring from [str, str + length)
-		constexpr static_wstring operator "" _ss(const wchar_t * str, size_t length) noexcept;
+			//! Construct static_wstring from [str, str + length)
+			constexpr static_wstring operator "" _ss(const wchar_t * str, size_t length) noexcept;
 
-		//! Construct static_u16string from [str, str + length)
-		constexpr static_u16string operator "" _ss(const char16_t * str, size_t length) noexcept;
+			//! Construct static_u16string from [str, str + length)
+			constexpr static_u16string operator "" _ss(const char16_t * str, size_t length) noexcept;
 
-		//! Construct static_u32string from [str, str + length)
-		constexpr static_u32string operator "" _ss(const char32_t * str, size_t length) noexcept;
+			//! Construct static_u32string from [str, str + length)
+			constexpr static_u32string operator "" _ss(const char32_t * str, size_t length) noexcept;
 
-		//! Construct string_key from [str, str + length). The object is a view of the string literal, and allocates no memory
-		inline string_key operator "" _sk(const char * str, size_t length) noexcept;
+			//! Construct string_key from [str, str + length). The object is a view of the string literal, and allocates no memory
+			inline string_key operator "" _sk(const char * str, size_t length) noexcept;
 
-		//! Construct wstring_key from [str, str + length). The object is a view of the string literal, and allocates no memory
-		inline wstring_key operator "" _sk(const wchar_t * str, size_t length) noexcept;
+			//! Construct wstring_key from [str, str + length). The object is a view of the string literal, and allocates no memory
+			inline wstring_key operator "" _sk(const wchar_t * str, size_t length) noexcept;
 
-		//! Construct u16string_key from [str, str + length). The object is a view of the string literal, and allocates no memory
-		inline u16string_key operator "" _sk(const char16_t * str, size_t length) noexcept;
+			//! Construct u16string_key from [str, str + length). The object is a view of the string literal, and allocates no memory
+			inline u16string_key operator "" _sk(const char16_t * str, size_t length) noexcept;
 
-		//! Construct u16string_key from [str, str + length). The object is a view of the string literal, and allocates no memory
-		inline u32string_key operator "" _sk(const char32_t * str, size_t length) noexcept;
+			//! Construct u16string_key from [str, str + length). The object is a view of the string literal, and allocates no memory
+			inline u32string_key operator "" _sk(const char32_t * str, size_t length) noexcept;
 
-	} // namespace string_key_literals
+		} // namespace string_key_literals
+	} // namespace literals
 
 } // namespace json
 

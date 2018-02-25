@@ -834,6 +834,29 @@ namespace json
 			return { members.end() };
 	}
 
+	inline namespace literals
+	{
+		inline namespace value_literals
+		{
+
+			value operator "" _jv(unsigned long long i) noexcept
+			{
+				return value(static_cast<int64_t>(i));
+			}
+
+			value operator "" _jv(long double d) noexcept
+			{
+				return value(static_cast<double>(d));
+			}
+
+			value operator "" _jv(const char * str, size_t length) noexcept
+			{
+				return value(string(str, str + length));
+			}
+
+		}
+	}
+
 } // namespace json
 
 namespace std

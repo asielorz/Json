@@ -378,6 +378,18 @@ namespace json
 		> stored_value;
 	};
 
+	inline namespace literals
+	{
+		inline namespace value_literals
+		{
+
+			value operator "" _jv(unsigned long long i) noexcept;
+			value operator "" _jv(long double d) noexcept;
+			value operator "" _jv(const char * str, size_t length) noexcept;
+
+		} // namespace value_literals
+	} // namespace literals
+
 } // namespace json
 
 namespace std

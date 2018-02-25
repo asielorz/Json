@@ -24,14 +24,14 @@ namespace json
 						++end;
 
 					if (*end == '\0')
-						throw syntax_error{ "Unclosed c style comment." };
+						throw detailed_syntax_error<CharForwardIterator>{ "Unclosed c style comment.", end };
 
 					return std::distance(begin, end) + 2; // +2 to account the ending "*/". In the c++ comments we don't 
 														  // add 1 because the newline is not part of the comment
 				}
 				else
 				{
-					throw syntax_error{ ("Unexpected character following '/'. Expected '/' or '*', found '" + std::string{ *std::next(end) } +"' instead.").c_str() };
+					throw detailed_syntax_error<CharForwardIterator>{ ("Unexpected character following '/'. Expected '/' or '*', found '" + std::string{ *std::next(end) } +"' instead.").c_str(), end };
 				}
 			}
 
@@ -47,7 +47,7 @@ namespace json
 				++end;
 
 				if (*end == '\0')
-					throw syntax_error{ "Unclosed string." };
+					throw detailed_syntax_error<CharForwardIterator>{ "Unclosed string.", end };
 
 				return std::distance(begin, end) + 1; // +1  because the ending " is part of the string
 			}
@@ -76,7 +76,7 @@ namespace json
 					else if (is_delimiter(*end))
 						break;
 					else
-						throw syntax_error{ "Unknown character found when parsing number literal." };
+						throw detailed_syntax_error<CharForwardIterator>{ "Unknown character found when parsing number literal.", end };
 				}
 
 				return std::distance(begin, end);
@@ -100,7 +100,7 @@ namespace json
 					if (std::equal(true_str, true_str + length_of_true, begin, end) && is_delimiter(*end))
 						return length_of_true;
 					else
-						throw syntax_error{ "Unrecognized keyword." };
+						throw detailed_syntax_error<CharForwardIterator>{ "Unrecognized keyword.", begin };
 				}
 				else if (*begin == 'f')
 				{
@@ -108,13 +108,13 @@ namespace json
 					if (std::equal(false_str, false_str + length_of_false, begin, end) && is_delimiter(*end))
 						return length_of_false;
 					else
-						throw syntax_error{ "Unrecognized keyword." };
+						throw detailed_syntax_error<CharForwardIterator>{ "Unrecognized keyword.", begin };
 				}
 				const auto end = std::next(begin, length_of_null);
 				if (std::equal(null_str, null_str + length_of_null, begin, end) && is_delimiter(*end))
 					return length_of_null;
 				else
-					throw syntax_error{ "Unrecognized keyword." };
+					throw detailed_syntax_error<CharForwardIterator>{ "Unrecognized keyword.", begin };
 			}
 
 			// Returns the length of a token in the source given the position of the token and its type
@@ -223,7 +223,13 @@ namespace json
 			template <typename TokenForwardIterator>
 			json::value parse_object(TokenForwardIterator begin, TokenForwardIterator end, TokenForwardIterator & new_begin)
 			{
+				using token_t = typename std::iterator_traits<TokenForwardIterator>::value_type;
+				using CharForwardIterator = typename token_t::char_iterator_type;
+
 				json::value root{ value_type::object };
+
+				// Save where the object starts so that we can use it to give more information if we have to throw
+				const auto object_start = begin;
 
 				// Increment begin to skip the '{' token
 				++begin;
@@ -231,7 +237,7 @@ namespace json
 				// Check for comments and bad input
 				begin = skip_comments(begin, end);
 				if (begin == end)
-					throw syntax_error{ "Too few tokens when parsing object" };
+					throw detailed_syntax_error<CharForwardIterator>{ "Too few tokens when parsing object", object_start->begin };
 
 				// Check for empty object
 				if (begin->type == token_type::close_curly_brace)
@@ -247,8 +253,9 @@ namespace json
 					// Skip possible comments
 					begin = skip_comments(begin, end);
 
-					if (begin->type != token_type::string)
-						throw syntax_error{ "Non string value as member key for object." };
+					const auto key_token = begin;
+					if (key_token->type != token_type::string)
+						throw detailed_syntax_error<CharForwardIterator>{ "Non string value as member key for object.", key_token->begin };
 
 					// Read the key
 					json::string key = build_value(begin, end, begin).as_string();
@@ -256,27 +263,30 @@ namespace json
 					// Assert the next token is a colon
 					begin = skip_comments(begin, end);
 					if (begin == end || begin->type != token_type::colon)
-						throw syntax_error{ "Expected : after member key when parsing object." };
+						throw detailed_syntax_error<CharForwardIterator>{ "Expected : after member key when parsing object.", begin->begin };
 
+					// Save colon token in order to be able to throw
+					const auto colon_token = begin;
+					
 					// Skip the : as it contains no valuable information. We only need to assert it's there
 					++begin;
 
 					begin = skip_comments(begin, end);
 					if (begin == end)
-						throw syntax_error{ "Expected value after : when parsing object." };
+						throw detailed_syntax_error<CharForwardIterator>{ "Expected value after : when parsing object.", colon_token->begin };
 
 					// Read the data of the member
 					json::value member = build_value(begin, end, begin);
 
 					// Try to insert new value
 					if (root.as_object().insert(std::move(key), std::move(member)) == root.as_object().end())
-						throw syntax_error{ ("Repeated member key \"" + key + "\" when parsing object").c_str() };
+						throw detailed_syntax_error<CharForwardIterator>{ ("Repeated member key \"" + key + "\" when parsing object").c_str(), key_token->begin };
 
 					// Comments
 					begin = skip_comments(begin, end);
 					// Bad input
 					if (begin == end)
-						throw syntax_error{ "Too few tokens when parsing array" };
+						throw detailed_syntax_error<CharForwardIterator>{ "Too few tokens when parsing object.", object_start->begin };
 					// Comma
 					else if (begin->type == token_type::comma)
 						++begin;
@@ -288,7 +298,7 @@ namespace json
 					}
 					// Bad input
 					else
-						throw syntax_error{ "End } for array not found" };
+						throw detailed_syntax_error<CharForwardIterator>{ "End } for array not found", begin->begin };
 				}
 
 				new_begin = begin;
@@ -342,8 +352,14 @@ namespace json
 			template <typename TokenForwardIterator>
 			json::value parse_array(TokenForwardIterator begin, TokenForwardIterator end, TokenForwardIterator & new_begin)
 			{
+				using token_t = typename std::iterator_traits<TokenForwardIterator>::value_type;
+				using CharForwardIterator = typename token_t::char_iterator_type;
+
 				json::value root{ value_type::array };
 				json::array & array = root.as_array();
+
+				// Save start in order we need it to throw
+				const auto array_start = begin;
 
 				// Increment begin to skip the '[' token
 				++begin;
@@ -351,7 +367,7 @@ namespace json
 				// Check for bad input
 				begin = skip_comments(begin, end);
 				if (begin == end)
-					throw syntax_error{ "Too few tokens when parsing array" };
+					throw detailed_syntax_error<CharForwardIterator>{ "Too few tokens when parsing array", array_start->begin };
 
 				// Check for empty array
 				if (begin->type == token_type::close_square_bracket)
@@ -375,7 +391,7 @@ namespace json
 					begin = skip_comments(begin, end);
 					// Bad input
 					if (begin == end)
-						throw syntax_error{ "Too few tokens when parsing array" };
+						throw detailed_syntax_error<CharForwardIterator>{ "Too few tokens when parsing array", array_start->begin };
 					// Comma
 					else if (begin->type == token_type::comma)
 						++begin;
@@ -387,7 +403,7 @@ namespace json
 					}
 					// Bad input
 					else
-						throw syntax_error{ "End ] for array not found" };
+						throw detailed_syntax_error<CharForwardIterator>{ "End ] for array not found", begin->begin };
 				}
 
 				new_begin = begin;
@@ -458,7 +474,7 @@ namespace json
 							}
 							default:
 							{
-								throw syntax_error{ "Invalid control character" };
+								throw detailed_syntax_error<CharForwardIterator>{ "Invalid control character", t.begin };
 							}
 						}
 					}
@@ -548,6 +564,9 @@ namespace json
 					std::iterator_traits<TokenForwardIterator>::value_type>::value,
 				"In function build_value TokenForwardIterator must dereference to json::parser::token");
 
+			using token_t = typename std::iterator_traits<TokenForwardIterator>::value_type;
+			using CharForwardIterator = typename token_t::char_iterator_type;
+
 			using namespace ::json::parser::impl;
 
 			begin = skip_comments(begin, end);
@@ -586,27 +605,65 @@ namespace json
 					return json::value{};
 				}
 				default:
-					throw syntax_error{ "Invalid token type at the beginning of a value." };
+					throw detailed_syntax_error<CharForwardIterator>{ "Invalid token type at the beginning of a value.", begin->begin };
 			}
 		}
 
 		template <typename CharForwardIterator>
 		json::value parse(CharForwardIterator begin, CharForwardIterator end)
 		{
-			const auto tokens = tokenize(begin, end);
-			typename std::vector<token<CharForwardIterator>>::const_iterator tokens_end;
-			json::value root = build_value(tokens.begin(), tokens.end(), tokens_end);
+			try
+			{
+				const auto tokens = tokenize(begin, end);
+				typename std::vector<token<CharForwardIterator>>::const_iterator tokens_end;
+				json::value root = build_value(tokens.begin(), tokens.end(), tokens_end);
 
-			// A json file may have comments after the value
-			tokens_end = impl::skip_comments(tokens_end, tokens.end());
+				// A json file may have comments after the value
+				tokens_end = impl::skip_comments(tokens_end, tokens.end());
 
-			// This will assert the file only contains a single value
-			if (tokens_end != tokens.end())
-				throw syntax_error{ "More than one value in the string" };
+				// This will assert the file only contains a single value
+				if (tokens_end != tokens.end())
+					throw syntax_error{ "More than one value in the string" };
 
-			return root;
+				return root;
+			}
+			catch (const impl::detailed_syntax_error<CharForwardIterator> & error)
+			{
+				throw impl::generate_meaningful_syntax_error(error, begin);
+			}
 		}
 
+		namespace impl
+		{
+
+			template <typename CharForwardIterator>
+			detailed_syntax_error<CharForwardIterator> generate_meaningful_syntax_error(const detailed_syntax_error<CharForwardIterator> & error, CharForwardIterator source_begin)
+			{
+				size_t row = 1;
+				size_t column = 1;
+
+				const auto error_location = error.where();
+				for (auto it = source_begin; it != error_location; ++it)
+				{
+					if (*it == '\n')
+					{
+						++row;
+						column = 1;
+					}
+					else
+						++column;
+				}
+
+				std::string what_msg = error.what();
+				what_msg += "\nRow: ";
+				what_msg += std::to_string(row);
+				what_msg += "\nColumn: ";
+				what_msg += std::to_string(column);
+
+				return detailed_syntax_error<CharForwardIterator>(what_msg.c_str(), error_location);
+			}
+
+		} // namespace impl
 	} // namespace parser
 } // namespace json
 

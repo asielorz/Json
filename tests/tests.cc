@@ -1657,18 +1657,18 @@ TEST(points_inside_returns_true_if_a_pointer_points_inside_an_array)
 	const char * const p5 = array + 2048;
 	const char * const p6 = nullptr;
 
-	debug_assert(json::points_inside(p1, array) == true);
-	debug_assert(json::points_inside(p2, array) == true);
-	debug_assert(json::points_inside(p3, array) == true);
-	debug_assert(json::points_inside(p4, array) == false);
-	debug_assert(json::points_inside(p5, array) == false);
-	debug_assert(json::points_inside(p6, array) == false);
+	debug_assert(json::utils::points_inside(p1, array) == true);
+	debug_assert(json::utils::points_inside(p2, array) == true);
+	debug_assert(json::utils::points_inside(p3, array) == true);
+	debug_assert(json::utils::points_inside(p4, array) == false);
+	debug_assert(json::utils::points_inside(p5, array) == false);
+	debug_assert(json::utils::points_inside(p6, array) == false);
 }
 
 TEST(release_returns_the_content_of_a_string_and_makes_it_empty)
 {
 	std::string str = "A pretty long string that doesn't fit short string optimization";
-	char * p = json::release(str);
+	char * p = json::utils::release(str);
 
 	debug_assert(str.empty());
 	debug_assert(p == std::string{ "A pretty long string that doesn't fit short string optimization" });
@@ -1679,7 +1679,7 @@ TEST(release_returns_the_content_of_a_string_and_makes_it_empty)
 TEST(release_returns_null_with_a_string_optimized_with_short_string_optimization)
 {
 	std::string str = "Short";
-	char * p = json::release(str);
+	char * p = json::utils::release(str);
 
 	debug_assert(!str.empty());
 	debug_assert(p == nullptr);
@@ -1689,7 +1689,7 @@ TEST(release_returns_the_content_of_a_vector_and_makes_it_empty)
 {
 	const std::initializer_list<int> ilist = { 1, 2, 3, 4, 5 };
 	std::vector<int> v = ilist;
-	auto p = json::release(v);
+	auto p = json::utils::release(v);
 
 	debug_assert(v.empty());
 	debug_assert(std::equal(ilist.begin(), ilist.end(), p, p + ilist.size()));
@@ -1700,7 +1700,7 @@ TEST(release_returns_the_content_of_a_vector_and_makes_it_empty)
 TEST(release_returns_a_null_pointer_for_an_empty_vector)
 {
 	std::vector<int> v;
-	auto p = json::release(v);
+	auto p = json::utils::release(v);
 
 	debug_assert(p == nullptr);
 }
@@ -1708,7 +1708,7 @@ TEST(release_returns_a_null_pointer_for_an_empty_vector)
 TEST(release_with_unique_ptr_calls_member_release_function)
 {
 	std::unique_ptr<int> up{ new int(3) };
-	auto p = json::release(up);
+	auto p = json::utils::release(up);
 
 	debug_assert(up == nullptr);
 	debug_assert(*p == 3);
@@ -1720,7 +1720,7 @@ TEST(release_with_unique_ptr_of_arrays_works_correctly)
 {
 	std::unique_ptr<int[]> up{ new int[4] };
 	up[2] = 4;
-	int * p = json::release(up);
+	int * p = json::utils::release(up);
 
 	debug_assert(up == nullptr);
 	debug_assert(p[2] == 4);
@@ -1747,13 +1747,13 @@ TEST(a_string_key_with_wchar_also_implements_short_string_optimization)
 	const wstring_key s1 = L"short";
 	wstring_key s2 = L"A longer string";
 
-	debug_assert(json::points_inside(s1.c_str(), s1) == true);
-	debug_assert(json::points_inside(s2.c_str(), s2) == false);
+	debug_assert(json::utils::points_inside(s1.c_str(), s1) == true);
+	debug_assert(json::utils::points_inside(s2.c_str(), s2) == false);
 	
 	wstring_key s3 = std::move(s2);
 
-	debug_assert(json::points_inside(s2.c_str(), s2) == true);
-	debug_assert(json::points_inside(s3.c_str(), s3) == false);
+	debug_assert(json::utils::points_inside(s2.c_str(), s2) == true);
+	debug_assert(json::utils::points_inside(s3.c_str(), s3) == false);
 }
 
 TEST(string_key_move_constructor_from_std_string)
@@ -1955,15 +1955,64 @@ TEST(parse_algorithm_can_take_a_sequence_of_chars_which_is_not_in_contiguous_mem
 	debug_assert(val1 == val2);
 }
 
-TEST(deleteme_visualizers)
+TEST(json_value_literals_let_the_user_create_json_values_from_integer_real_and_string_literals)
 {
-	json::value v0;
-	json::value v1 = 4;
-	json::value v2 = 4.5;
-	json::value v3 = true;
-	json::value v4 = "Hello";
-	json::value v5 = { 4, "Foobar", false };
-	json::value v6 = { std::make_pair("hello", 4), {"foo", "bar"} };
+	{
+		// Using namespace that only includes literals for json::value
+		using namespace json::value_literals;
+
+		const auto vi = 15_jv;
+		debug_assert(vi.is_int());
+		debug_assert(vi.as_int() == 15);
+
+		const auto vf = 3.141592_jv;
+		debug_assert(vf.is_real());
+		debug_assert(vf.as_double() == 3.141592);
+
+		const auto vs = "Hello, world!"_jv;
+		debug_assert(vs.is_string());
+		debug_assert(vs.as_string() == "Hello, world!");
+	}
+
+	{
+		// Using namespace that includes all literals (json::value and static_string)
+		using namespace json::literals;
+
+		const auto vi = 15_jv;
+		debug_assert(vi.is_int());
+		debug_assert(vi.as_int() == 15);
+
+		const auto vf = 3.141592_jv;
+		debug_assert(vf.is_real());
+		debug_assert(vf.as_double() == 3.141592);
+
+		const auto vs = "Hello, world!"_jv;
+		debug_assert(vs.is_string());
+		debug_assert(vs.as_string() == "Hello, world!");
+
+		auto vo = json::value(json::value_type::object);
+		vo.as_object()["Foo"_ss] = 4;
+	}
 }
 
+TEST(sysntax_errors_from_parse_give_row_and_column)
+{
+	// Missing :
+	const std::string source = "{ "
+		"\n\"foo\" : 3, "
+		"\n\"bar\" true, "
+		"\n\"baz\" : null, "
+		"\n\"zzz\" : [ 1, 2, 3 ] "
+		"\n}";
+
+	try
+	{
+		const json::value val = json::parser::parse(source);
+	}
+	catch (const std::exception & error)
+	{
+		std::cout << error.what() << '\n';
+		::system("pause");
+	}
+}
 

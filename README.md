@@ -14,7 +14,7 @@ This is a library that allows easy manipulation of JSON values, as well as seria
 
 ## Dependencies
 
-The code doesn't have any external dependencies appart from the C++ standard library. It is written in standard C++14 with no compiler extensions. It has been tested to compile and link correctly on Visual Studio 15 at warning level 4, Clang 5.0 with -Wall -Wextra -ansi -pedantic and cleanly passes Microsoft's static analyzer.
+The code doesn't have any external dependencies appart from the C++ standard library. It is written in standard C++17 with no compiler extensions. It has been tested to compile and link correctly on Visual Studio 17 at warning level 4, Clang 5.0 with -Wall -Wextra -ansi -pedantic and cleanly passes Microsoft's static analyzer.
 
 ## Files
 
@@ -44,19 +44,6 @@ Class that represents a json::value. This is, a variant type that may be a numbe
   - writer.cc
   - writer.hh
 
-Functions to transform a json::value to a string in JSON format representing it's data.
-  - mpl\algorith.hh
-
-Algorithms on type lists used by the variant.
-  - mpl\copy_control_traits.hh
-  - mpl\copy_control_traits.inl
-
-Virtual table class with the copy control functions (constructor, copy and move operations and destructor) of a type, used by the variant.
-  - mpl\variant.hh
-  - mpl\variant.inl
-
-Variant class internally used by json::value. Can be used on it's own.
-	
 No specific build process is required.
 
 ## Other files

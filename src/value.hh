@@ -3,9 +3,9 @@
 
 #include "config.hh"
 #include "string_key.hh"
-#include "mpl/variant.hh"
 #include <stdexcept> // std::logic_error
 #include <cstdint> // int64_t, uint64_t
+#include <variant> // std::variant
 
 namespace json
 {
@@ -125,6 +125,8 @@ namespace json
 		value & operator [] (const char * key);
 		//! Accesses a member with the given key. Inserts a new default constructed element if not found
 		value & operator [] (const json::string & key);
+		//! Accesses a member with the given key. Inserts a new default constructed element if not found
+		value & operator [] (std::string_view key);
 		//! Accesses a member with the given key. Inserts a new default constructed element if not found.
 		//! If a new element is inserted, the key will be constructed by moving, so the parameter string will become empty
 		value & operator [] (json::string && key);
@@ -132,43 +134,29 @@ namespace json
 		//! If a value is inserted, the string used as key will not be copied. The map will keep a reference to the original string.
 		value & operator [] (static_string key);
 		//! Accesses a member with the given key. Returns null reference if not found
-		const value & operator [] (const char * key) const noexcept;
-		//! Accesses a member with the given key. Returns null reference if not found
-		const value & operator [] (const json::string & key) const noexcept;
+		const value & operator [] (std::string_view key) const noexcept;
 
 		//! Accesses a member with the given key. Throws std::out_of_range if not found
-		value & at(const char * key);
+		value & at(std::string_view key);
 		//! Accesses a member with the given key. Throws std::out_of_range if not found
-		value & at(const json::string & key);
-		//! Accesses a member with the given key. Throws std::out_of_range if not found
-		const value & at(const char * key) const;
-		//! Accesses a member with the given key. Throws std::out_of_range if not found
-		const value & at(const json::string & key) const;
+		const value & at(std::string_view key) const;
 
 		//! Accesses a member with the given key. Returns end iterator if not found
-		iterator find(const char * key) noexcept;
+		iterator find(std::string_view key) noexcept;
 		//! Accesses a member with the given key. Returns end iterator if not found
-		iterator find(const json::string & key) noexcept;
-		//! Accesses a member with the given key. Returns end iterator if not found
-		const_iterator find(const char * key) const noexcept;
-		//! Accesses a member with the given key. Returns end iterator if not found
-		const_iterator find(const json::string & key) const noexcept;
+		const_iterator find(std::string_view key) const noexcept;
 
 		//! True if there exists a member with the given key
-		bool is_member(const char * key) const noexcept;
-		//! True if there exists a member with the given key
-		bool is_member(const json::string & key) const noexcept;
+		bool is_member(std::string_view key) const noexcept;
 
 		//! Removes a member with the given key
-		bool remove_member(const char * key);
-		//! Removes a member with the given key
-		bool remove_member(const json::string & key);
+		bool remove_member(std::string_view key) noexcept;
 
 		//! Returns a vector with the keys of all members
 		json::vector<json::string> member_names() const;
 		//! Returns a vector with the keys of all members. The vector doesn't own the strings,
 		//! so the pointers will invalidate if the member gets removed or the object gets destroyed.
-		json::vector<const char *> member_names_as_c_str() const;
+		json::vector<std::string_view> member_names_as_c_str() const;
 
 		//! Inserts an element with the given key. Returns an iterator to the inserted element, or end on failure
 		iterator insert(json::string_key key, const json::value & val);
@@ -368,7 +356,8 @@ namespace json
 
 	private:
 		//! Variant with the possible value types the class may have
-		mpl::variant<
+		std::variant<
+			std::monostate,	// This represents null
 			int64_t,
 			double,
 			bool,

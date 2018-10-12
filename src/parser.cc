@@ -66,14 +66,9 @@ namespace json
 
 		}
 
-		json::vector<token<const char *>> tokenize(const char * source)
+		json::vector<token<const char *>> tokenize(std::string_view source)
 		{
-			return tokenize(source, source + std::strlen(source));
-		}
-
-		json::vector<token<const char *>> tokenize(const json::string & source)
-		{
-			return tokenize(source.c_str(), source.c_str() + source.size());
+			return tokenize(source.data(), source.data() + source.size());
 		}
 
 		namespace impl
@@ -117,14 +112,9 @@ namespace json
 
 		} // namespace detail
 
-		json::value parse(const char * source)
+		json::value parse(std::string_view source)
 		{
-			return parse(source, source + std::strlen(source));
-		}
-
-		json::value parse(const json::string & source)
-		{
-			return parse(source.c_str(), source.c_str() + source.size());
+			return parse(source.data(), source.data() + source.size());
 		}
 
 		json::value parse(std::istream & is)

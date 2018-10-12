@@ -16,7 +16,7 @@
 
 namespace
 {
-	std::vector<std::function<void()>> tests;
+	std::vector<void(*)()> tests;
 }
 
 #if _DEBUG
@@ -1824,7 +1824,7 @@ TEST(rfind_returns_index_of_the_last_occurrence_of_a_substring_in_a_string_key)
 	debug_assert(s.rfind(std::string{ "lugar" }) == 6);
 	debug_assert(s.rfind('M') == 18);
 	debug_assert(s.rfind("foo") == json::string_key::npos);
-	debug_assert(s.rfind('a', 1) == 19);
+	debug_assert(s.rfind('a', s.size() - 2) == 19);
 }
 
 TEST(find_first_of_returns_the_first_character_equal_to_any_of_the_given)
@@ -1843,7 +1843,7 @@ TEST(find_last_of_returns_the_last_character_equal_to_any_of_the_given)
 
 	debug_assert(s.find_last_of("ijk f") == 17);
 	debug_assert(s.find_last_of("?)M") == 18);
-	debug_assert(s.find_last_of("ijk f", 7) == 14);
+	debug_assert(s.find_last_of("ijk f", s.size() - 8) == 14);
 	debug_assert(s.find_last_of("?") == json::string_key::npos);
 }
 
@@ -1861,7 +1861,7 @@ TEST(find_last_not_of_returns_the_last_character_not_equal_to_any_of_the_given)
 	const json::string_key s = "En un lugar de la Mancha";
 
 	debug_assert(s.find_last_not_of("Manch ") == 15);
-	debug_assert(s.find_last_not_of("lugar", 13) == 5);
+	debug_assert(s.find_last_not_of("lugar", s.size() - 14) == 5);
 	debug_assert(s.find_last_not_of("En un lugar de la Mancha") == json::string_key::npos);
 }
 
@@ -2012,7 +2012,22 @@ TEST(sysntax_errors_from_parse_give_row_and_column)
 	catch (const std::exception & error)
 	{
 		std::cout << error.what() << '\n';
-		::system("pause");
+		//::system("pause");
 	}
 }
 
+TEST(static_string_is_convertible_to_string_view)
+{
+	using namespace json::literals;
+
+	const auto ss = "Foobar"_ss;
+	const std::string_view sv = ss;
+	debug_assert(ss == sv);
+}
+
+TEST(can_correctly_serialize_an_int_that_doesnt_fit_in_4_bytes)
+{
+	int64_t i = static_cast<int64_t>(1) << 45;
+	int64_t i2 = json::parser::parse(json::writer::write(json::value(i))).as_int64();
+	debug_assert(i == i2);
+}

@@ -14,67 +14,67 @@ namespace json
 	value::value(){}
 
 	value::value(int v) noexcept
-		: stored_value{ mpl::type_list<int64_t>{}, static_cast<int64_t>(v) }
+		: stored_value(std::in_place_type<int64_t>, static_cast<int64_t>(v))
 	{}
 
 	value::value(unsigned v) noexcept
-		: stored_value{ mpl::type_list<int64_t>{}, static_cast<int64_t>(v) }
+		: stored_value(std::in_place_type<int64_t>, static_cast<int64_t>(v))
 	{}
 
 	value::value(int64_t v) noexcept
-		: stored_value{ v }
+		: stored_value(v)
 	{}
 
 	value::value(uint64_t v) noexcept
-		: stored_value{ mpl::type_list<int64_t>{}, static_cast<int64_t>(v) }
+		: stored_value(std::in_place_type<int64_t>, static_cast<int64_t>(v))
 	{}
 
 	value::value(float v) noexcept
-		: stored_value{ mpl::type_list<double>{}, static_cast<double>(v) }
+		: stored_value(std::in_place_type<double>, static_cast<double>(v))
 	{}
 
 	value::value(double v) noexcept
-		: stored_value{ v }
+		: stored_value(v)
 	{}
 
 	value::value(bool v) noexcept
-		: stored_value{ v }
+		: stored_value(v)
 	{}
 
 	value::value(const char * v)
-		: stored_value{ mpl::type_list<json::string>{}, v }
+		: stored_value(std::in_place_type<json::string>, v)
 	{}
 
 	value::value(const json::string & v)
-		: stored_value{ v }
+		: stored_value(v)
 	{}
 
 	value::value(json::string && v)
-		: stored_value{ std::move(v) }
+		: stored_value(std::move(v))
 	{}
 
 	value::value(const json::array & v)
-		: stored_value{ v }
+		: stored_value(v)
 	{}
 
 	value::value(json::array && v)
-		: stored_value{ std::move(v) }
+		: stored_value(std::move(v))
 	{}
 
 	value::value(const json::object & v)
-		: stored_value{ v }
+		: stored_value(v)
 	{}
 
 	value::value(json::object && v)
-		: stored_value{ std::move(v) }
+		: stored_value(std::move(v))
 	{}
 
 	value::value(std::initializer_list<json::value> list)
-		: stored_value{ mpl::type_list<json::array>{}, list }
+		: stored_value(std::in_place_type<json::array>, list)
 	{}
 
 	value::value(std::initializer_list<std::pair<const json::string_key, json::value>> list)
-		: stored_value{ mpl::type_list<json::object>{}, list }
+		: stored_value(std::in_place_type<json::object>, list)
 	{}
 
 	value::value(value_type type)
@@ -207,9 +207,7 @@ namespace json
 
 	void value::swap(value & other) noexcept
 	{
-		auto temp = std::move(other.stored_value);
-		other.stored_value = std::move(stored_value);
-		stored_value = std::move(temp);
+		std::swap(stored_value, other.stored_value);
 	}
 	
 	//*************************************************************************************************
@@ -220,20 +218,20 @@ namespace json
 		if (is_numeric() && other.is_numeric())
 			return as_double() < other.as_double();
 		else if (is_bool() && other.is_bool())
-			return stored_value.as<bool>() < other.stored_value.as<bool>();
+			return as_bool() < other.as_bool();
 		else if (is_string() && other.is_string())
-			return stored_value.as<json::string>() < other.stored_value.as<json::string>();
+			return as_string() < other.as_string();
 		else if (is_array() && other.is_array())
-			return stored_value.as<json::array>() < other.stored_value.as<json::array>();
+			return as_array() < other.as_array();
 		else if (is_object() && other.is_object())
-			return stored_value.as<json::object>() < other.stored_value.as<json::object>();
+			return as_object() < other.as_object();
 		else
 			throw invalid_operation{ "Value not compatible with operator <" };
 	}
 
 	bool value::operator <= (const value & other) const
 	{
-		return *this < other || *this == other;
+		return other >= *this;
 	}
 
 	bool value::operator >= (const value & other) const
@@ -248,34 +246,12 @@ namespace json
 
 	bool value::operator == (const value & other) const noexcept
 	{
-		const auto t = type();
-		if (t != other.type())
-			return false;
-
-		switch (t)
-		{
-		case value_type::null:
-			return true;
-		case value_type::integer:
-			return stored_value.as<int64_t>() == other.stored_value.as<int64_t>();
-		case value_type::real:
-			return stored_value.as<double>() == other.stored_value.as<double>();
-		case value_type::boolean:
-			return stored_value.as<bool>() == other.stored_value.as<bool>();
-		case value_type::string:
-			return stored_value.as<json::string>() == other.stored_value.as<json::string>();
-		case value_type::array:
-			return stored_value.as<json::array>() == other.stored_value.as<json::array>();
-		case value_type::object:
-			return stored_value.as<json::object>() == other.stored_value.as<json::object>();
-		default:
-			return false;
-		}
+		return stored_value == other.stored_value;
 	}
 	
 	bool value::operator != (const value & other) const noexcept
 	{
-		return !(*this == other);
+		return stored_value != other.stored_value;
 	}
 
 	//*************************************************************************************************
@@ -284,19 +260,19 @@ namespace json
 	int value::as_int() const
 	{
 		if (is_int())
-			return static_cast<int>(stored_value.as<int64_t>());
+			return static_cast<int>(std::get<int64_t>(stored_value));
 		else if (is_real())
-			return static_cast<int>(stored_value.as<double>());
+			return static_cast<int>(std::get<double>(stored_value));
 		else
-			throw invalid_operation{ "Value not compatible with as_int" };
+			throw invalid_operation("Value not compatible with as_int");
 	}
 
 	unsigned value::as_uint() const
 	{
 		if (is_int())
-			return static_cast<unsigned>(stored_value.as<int64_t>());
+			return static_cast<unsigned>(std::get<int64_t>(stored_value));
 		else if (is_real())
-			return static_cast<unsigned>(stored_value.as<double>());
+			return static_cast<unsigned>(std::get<double>(stored_value));
 		else
 			throw invalid_operation{ "Value not compatible with as_uint" };
 	}
@@ -304,9 +280,9 @@ namespace json
 	int64_t value::as_int64() const
 	{
 		if (is_int())
-			return stored_value.as<int64_t>();
+			return std::get<int64_t>(stored_value);
 		else if (is_real())
-			return static_cast<int64_t>(stored_value.as<double>());
+			return static_cast<int64_t>(std::get<double>(stored_value));
 		else
 			throw invalid_operation{ "Value not compatible with as_int64" };
 	}
@@ -314,9 +290,9 @@ namespace json
 	uint64_t value::as_uint64() const
 	{
 		if (is_int())
-			return static_cast<uint64_t>(stored_value.as<int64_t>());
+			return static_cast<uint64_t>(std::get<int64_t>(stored_value));
 		else if (is_real())
-			return static_cast<uint64_t>(stored_value.as<double>());
+			return static_cast<uint64_t>(std::get<double>(stored_value));
 		else
 			throw invalid_operation{ "Value not compatible with as_uint64" };
 	}
@@ -324,9 +300,9 @@ namespace json
 	float value::as_float() const
 	{
 		if (is_real())
-			return static_cast<float>(stored_value.as<double>());
+			return static_cast<float>(std::get<double>(stored_value));
 		else if (is_int())
-			return static_cast<float>(stored_value.as<int64_t>());
+			return static_cast<float>(std::get<int64_t>(stored_value));
 		else
 			throw invalid_operation{ "Value not compatible with as_double" };
 	}
@@ -334,9 +310,9 @@ namespace json
 	double value::as_double() const
 	{
 		if (is_real())
-			return stored_value.as<double>();
+			return std::get<double>(stored_value);
 		else if (is_int())
-			return static_cast<double>(stored_value.as<int64_t>());
+			return static_cast<double>(std::get<int64_t>(stored_value));
 		else
 			throw invalid_operation{ "Value not compatible with as_double" };
 
@@ -345,7 +321,7 @@ namespace json
 	bool value::as_bool() const
 	{
 		if (is_bool())
-			return stored_value.as<bool>();
+			return std::get<bool>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with as_bool" };
 	}
@@ -353,7 +329,7 @@ namespace json
 	const char * value::as_c_string() const
 	{
 		if (is_string())
-			return stored_value.as<json::string>().c_str();
+			return std::get<json::string>(stored_value).c_str();
 		else
 			throw invalid_operation{ "Value not compatible with as_c_string" };
 	}
@@ -361,7 +337,7 @@ namespace json
 	json::string & value::as_string()
 	{
 		if (is_string())
-			return stored_value.as<json::string>();
+			return std::get<json::string>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with as_string" };
 	}
@@ -369,7 +345,7 @@ namespace json
 	const json::string & value::as_string() const
 	{
 		if (is_string())
-			return stored_value.as<json::string>();
+			return std::get<json::string>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with as_string" };
 	}
@@ -377,7 +353,7 @@ namespace json
 	json::array & value::as_array()
 	{
 		if (is_array())
-			return stored_value.as<json::array>();
+			return std::get<json::array>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with as_array" };
 	}
@@ -385,7 +361,7 @@ namespace json
 	const json::array & value::as_array() const
 	{
 		if (is_array())
-			return stored_value.as<json::array>();
+			return std::get<json::array>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with as_array" };
 	}
@@ -393,7 +369,7 @@ namespace json
 	json::object & value::as_object()
 	{
 		if (is_object())
-			return stored_value.as<json::object>();
+			return std::get<json::object>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with as_object" };
 	}
@@ -401,7 +377,7 @@ namespace json
 	const json::object & value::as_object() const
 	{
 		if (is_object())
-			return stored_value.as<json::object>();
+			return std::get<json::object>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with as_object" };
 	}
@@ -409,7 +385,7 @@ namespace json
 	int64_t & value::stored_int()
 	{
 		if (is_int())
-			return stored_value.as<int64_t>();
+			return std::get<int64_t>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with stored_int" };
 	}
@@ -417,7 +393,7 @@ namespace json
 	const int64_t & value::stored_int() const
 	{
 		if (is_int())
-			return stored_value.as<int64_t>();
+			return std::get<int64_t>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with stored_int" };
 	}
@@ -425,7 +401,7 @@ namespace json
 	double & value::stored_double()
 	{
 		if (is_real())
-			return stored_value.as<double>();
+			return std::get<double>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with stored_double" };
 	}
@@ -433,7 +409,7 @@ namespace json
 	const double & value::stored_double() const
 	{
 		if (is_real())
-			return stored_value.as<double>();
+			return std::get<double>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with stored_double" };
 	}
@@ -441,7 +417,7 @@ namespace json
 	bool & value::stored_bool()
 	{
 		if (is_real())
-			return stored_value.as<bool>();
+			return std::get<bool>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with stored_bool" };
 	}
@@ -449,7 +425,7 @@ namespace json
 	const bool & value::stored_bool() const
 	{
 		if (is_real())
-			return stored_value.as<bool>();
+			return std::get<bool>(stored_value);
 		else
 			throw invalid_operation{ "Value not compatible with stored_bool" };
 	}
@@ -459,7 +435,7 @@ namespace json
 
 	bool value::is_null() const noexcept
 	{
-		return !stored_value.valid();
+		return stored_value.index() == 0;
 	}
 
 	bool value::operator ! () const noexcept
@@ -469,12 +445,12 @@ namespace json
 
 	bool value::is_int() const noexcept
 	{
-		return stored_value.is<int64_t>();
+		return std::holds_alternative<int64_t>(stored_value);
 	}
 
 	bool value::is_real() const noexcept
 	{
-		return stored_value.is<double>();
+		return std::holds_alternative<double>(stored_value);
 	}
 
 	bool value::is_numeric() const noexcept
@@ -484,45 +460,27 @@ namespace json
 
 	bool value::is_bool() const noexcept
 	{
-		return stored_value.is<bool>();
+		return std::holds_alternative<bool>(stored_value);
 	}
 
 	bool value::is_string() const noexcept
 	{
-		return stored_value.is<json::string>();
+		return std::holds_alternative<json::string>(stored_value);
 	}
 
 	bool value::is_array() const noexcept
 	{
-		return stored_value.is<json::array>();
+		return std::holds_alternative<json::array>(stored_value);
 	}
 
 	bool value::is_object() const noexcept
 	{
-		return stored_value.is<json::object>();
+		return std::holds_alternative<json::object>(stored_value);
 	}
 
 	json::value_type value::type() const noexcept
 	{
-		// stored_value.index() will return
-		//	  null    = -1
-		//	  integer =  0
-		//	  real    =  1
-		//	  boolean =  2
-		//	  string  =  3
-		//	  array   =  4
-		//	  object  =  5
-		// We have to map this to the enum value_type, where
-		//	  null    =  0
-		//	  integer =  1
-		//	  real    =  2
-		//    boolean =  3
-		//	  string  =  4
-		//	  array   =  5
-		//	  object  =  6
-		// So just add 1 to the return value of index() to get the current type in the enum
-
-		return static_cast<json::value_type>(stored_value.index() + 1);
+		return static_cast<json::value_type>(stored_value.index());
 	}
 
 	//*************************************************************************************************
@@ -647,17 +605,15 @@ namespace json
 	// a heap operation (malloc/free)
 	value & object::operator [] (const char * key)
 	{
-		// Search for the given key
-		const auto it = members.find(key);
-		// If found return the value
-		if (it != members.end())
-			return it->second;
-		// Otherwise insert a new value and return it
-		else
-			return members.emplace(key, json::value{}).first->second;
+		return this->operator[](std::string_view(key));
 	}
 
 	value & object::operator [] (const json::string & key)
+	{
+		return this->operator[](std::string_view(key));
+	}
+
+	value & object::operator [] (std::string_view key)
 	{
 		// Search for the given key
 		const auto it = members.find(key);
@@ -666,7 +622,7 @@ namespace json
 			return it->second;
 		// Otherwise insert a new value and return it
 		else
-			return members.emplace(key, json::value{}).first->second;
+			return members.emplace(json::string(key), json::value{}).first->second;
 	}
 
 	value & object::operator [] (json::string && key)
@@ -693,7 +649,7 @@ namespace json
 			return members.emplace(key, json::value{}).first->second;
 	}
 
-	const value & object::operator [] (const char * key) const noexcept
+	const value & object::operator [] (std::string_view key) const noexcept
 	{
 		// Search for the given key
 		const auto it = members.find(key);
@@ -705,12 +661,7 @@ namespace json
 			return json::value::null;
 	}
 
-	const value & object::operator [] (const json::string & key) const noexcept
-	{
-		return (*this)[key.c_str()];
-	}
-
-	value & object::at(const char * key)
+	value & object::at(std::string_view key)
 	{
 		// Search for the given key
 		const auto it = members.find(key);
@@ -719,15 +670,10 @@ namespace json
 			return it->second;
 		// Otherwise throw out of range
 		else
-			throw std::out_of_range{ std::string("Member \"") + key + "\" not found in object" };
+			throw std::out_of_range(std::string("Member \"") + std::string(key.begin(), key.end()) + "\" not found in object");
 	}
 
-	value & object::at(const std::string & key)
-	{
-		return at(key.c_str());
-	}
-
-	const value & object::at(const char * key) const
+	const value & object::at(std::string_view key) const
 	{
 		// Search for the given key
 		const auto it = members.find(key);
@@ -736,45 +682,25 @@ namespace json
 			return it->second;
 		// Otherwise throw out of range
 		else
-			throw std::out_of_range{ std::string("Member \"") + key + "\" not found in object" };
+			throw std::out_of_range(std::string("Member \"") + std::string(key.begin(), key.end()) + "\" not found in object");
 	}
 
-	const value & object::at(const std::string & key) const
-	{
-		return at(key.c_str());
-	}
-
-	object::iterator object::find(const char * key) noexcept
+	object::iterator object::find(std::string_view key) noexcept
 	{
 		return members.find(key);
 	}
 
-	object::iterator object::find(const std::string & key) noexcept
-	{
-		return find(key.c_str());
-	}
-
-	object::const_iterator object::find(const char * key) const noexcept
+	object::const_iterator object::find(std::string_view key) const noexcept
 	{
 		return members.find(key);
 	}
 
-	object::const_iterator object::find(const std::string & key) const noexcept
-	{
-		return find(key.c_str());
-	}
-
-	bool object::is_member(const char * key) const noexcept
+	bool object::is_member(std::string_view key) const noexcept
 	{
 		return members.find(key) != members.end();
 	}
 
-	bool object::is_member(const std::string & key) const noexcept
-	{
-		return is_member(key.c_str());
-	}
-
-	bool object::remove_member(const char * key)
+	bool object::remove_member(std::string_view key) noexcept
 	{
 		// map::erase(iterator) has constant time complexity, so erase(find(key)) is equivalent in complexity
 		// to erase(key), with the extra advantage of find being aware of transparent comparison
@@ -789,11 +715,6 @@ namespace json
 			return false;
 	}
 
-	bool object::remove_member(const std::string & key)
-	{
-		return remove_member(key.c_str());
-	}
-
 	json::vector<json::string> object::member_names() const
 	{
 		json::vector<json::string> names;
@@ -805,13 +726,13 @@ namespace json
 		return names;
 	}
 
-	json::vector<const char *> object::member_names_as_c_str() const
+	json::vector<std::string_view> object::member_names_as_c_str() const
 	{
-		json::vector<const char *> names;
+		json::vector<std::string_view> names;
 		names.reserve(members.size());
 
 		for (const auto & pair : members)
-			names.push_back(pair.first.c_str());
+			names.push_back(pair.first);
 
 		return names;
 	}

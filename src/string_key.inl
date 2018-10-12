@@ -1,3 +1,4 @@
+#include "string_key.hh"
 namespace json
 {
 
@@ -25,33 +26,46 @@ namespace json
 		return str_size;
 	}
 
+	template <typename CharT, typename Traits>
+	constexpr basic_static_string<CharT, Traits>::operator std::basic_string_view<CharT, Traits>() const noexcept
+	{
+		return std::basic_string_view<CharT, Traits>(c_str(), size());
+	}
+
 	//*****************************************************************************************************************
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(const CharT * s, const Allocator & a)
-		: Allocator{ a }
+		: Allocator(a)
 	{
 		copy_other(s, Traits::length(s));
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(const std::basic_string<CharT, Traits, Allocator> & s)
-		: Allocator{ s.get_allocator() }
+		: Allocator(s.get_allocator())
 	{
 		copy_other(s.c_str(), s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
+	basic_string_key<CharT, Traits, Allocator>::basic_string_key(std::basic_string_view<CharT, Traits> s, const Allocator & a)
+		: Allocator(a)
+	{
+		copy_other(s.data(), s.size());
+	}
+
+	template <typename CharT, typename Traits, typename Allocator>
 	template <typename OtherAllocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(const std::basic_string<CharT, Traits, OtherAllocator> & s, const Allocator & a)
-		: Allocator{ a }
+		: Allocator(a)
 	{
 		copy_other(s.c_str(), s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
 	basic_string_key<CharT, Traits, Allocator>::basic_string_key(std::basic_string<CharT, Traits, Allocator> && s)
-		: Allocator{ s.get_allocator() }
+		: Allocator(s.get_allocator())
 	{
 		// If s is a short string
 		if (utils::points_inside(s.c_str(), s))
@@ -239,192 +253,128 @@ namespace json
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	std::basic_string<CharT, Traits, Allocator> basic_string_key<CharT, Traits, Allocator>::substr(size_type pos, size_type count) const
+	std::basic_string_view<CharT, Traits> basic_string_key<CharT, Traits, Allocator>::substr(size_type pos, size_type count) const noexcept
 	{
 		const size_type first = std::min(pos, size());
 		const size_type last = count == npos 
 			? size()
 			: std::min(pos + count, size());
 
-		return std::basic_string<CharT, Traits, Allocator>{ begin() + first, begin() + last, get_allocator() };
+		return std::basic_string_view<CharT, Traits>{ data() + first, last - first };
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find(const std::basic_string<CharT, Traits, Allocator> & s, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find(std::basic_string_view<CharT, Traits> s, size_type pos) const noexcept
 	{
-		return find(s.c_str(), pos, s.size());
+		return find(s.data(), pos, s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find(const CharT * s, size_type pos, size_type count) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find(const CharT * s, size_type pos, size_type count) const noexcept
 	{
-		const auto it = std::search(begin() + pos, end(), s, s + count, Traits::eq);
-		if (it == end())
-			return npos;
-		else
-			return it - begin();
+		return std::basic_string_view<CharT, Traits>(c_str(), size()).find(s, pos, count);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find(const CharT * s, size_type pos) const
-	{
-		return find(s, pos, Traits::length(s));
-	}
-
-	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find(CharT ch, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find(CharT ch, size_type pos) const noexcept
 	{
 		return find(&ch, pos, 1);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::rfind(const std::basic_string<CharT, Traits, Allocator> & s, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::rfind(std::basic_string_view<CharT, Traits> s, size_type pos) const noexcept
 	{
-		return rfind(s.c_str(), pos, s.size());
+		return rfind(s.data(), pos, s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::rfind(const CharT * s, size_type pos, size_type count) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::rfind(const CharT * s, size_type pos, size_type count) const noexcept
 	{
-		const reverse_iterator s_begin{ s + count };
-		const reverse_iterator s_end{ s };
-
-		const auto it = std::search(rbegin() + pos, rend(), s_begin, s_end, Traits::eq);
-		if (it == rend())
-			return npos;
-		else
-			return rend() - it - count;
+		return std::basic_string_view<CharT, Traits>(c_str(), size()).rfind(s, pos, count);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::rfind(const CharT * s, size_type pos) const
-	{
-		return rfind(s, pos, Traits::length(s));
-	}
-
-	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::rfind(CharT ch, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::rfind(CharT ch, size_type pos) const noexcept
 	{
 		return rfind(&ch, pos, 1);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_of(const std::basic_string<CharT, Traits, Allocator> & s, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_of(std::basic_string_view<CharT, Traits> s, size_type pos) const noexcept
 	{
-		return find_first_of(s.c_str(), pos, s.size());
+		return find_first_of(s.data(), pos, s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_of(const CharT * s, size_type pos, size_type count) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_of(const CharT * s, size_type pos, size_type count) const noexcept
 	{
-		const auto it = std::find_first_of(begin() + pos, end(), s, s + count, Traits::eq);
-		if (it == end())
-			return npos;
-		else
-			return it - begin();
+		return std::basic_string_view<CharT, Traits>(c_str(), size()).find_first_of(s, pos, count);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_of(const CharT * s, size_type pos) const
-	{
-		return find_first_of(s, pos, Traits::length(s));
-	}
-
-	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_of(CharT ch, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_of(CharT ch, size_type pos) const noexcept
 	{
 		return find_first_of(&ch, pos, 1);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_not_of(const std::basic_string<CharT, Traits, Allocator> & s, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_not_of(std::basic_string_view<CharT, Traits> s, size_type pos) const noexcept
 	{
-		return find_first_not_of(s.c_str(), pos, s.size());
+		return find_first_not_of(s.data(), pos, s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_not_of(const CharT * s, size_type pos, size_type count) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_not_of(const CharT * s, size_type pos, size_type count) const noexcept
 	{
-		for (size_type i = pos; i < size(); ++i)
-			if (std::none_of(s, s + count, [&](CharT ch) { return Traits::eq(ch, data()[i]); }))
-				return i;
-		return npos;
+		return std::basic_string_view<CharT, Traits>(c_str(), size()).find_first_not_of(s, pos, count);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_not_of(const CharT * s, size_type pos) const
-	{
-		return find_first_not_of(s, pos, Traits::length(s));
-	}
-
-	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_not_of(CharT ch, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_first_not_of(CharT ch, size_type pos) const noexcept
 	{
 		return find_first_not_of(&ch, pos, 1);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_of(const std::basic_string<CharT, Traits, Allocator> & s, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_of(std::basic_string_view<CharT, Traits> s, size_type pos) const noexcept
 	{
-		return find_last_of(s.c_str(), pos, s.size());
+		return find_last_of(s.data(), pos, s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_of(const CharT * s, size_type pos, size_type count) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_of(const CharT * s, size_type pos, size_type count) const noexcept
 	{
-		const reverse_iterator s_begin{ s + count };
-		const reverse_iterator s_end{ s };
-
-		const auto it = std::find_first_of(rbegin() + pos, rend(), s_begin, s_end, Traits::eq);
-		if (it == rend())
-			return npos;
-		else
-			return rend() - it - 1;
+		return std::basic_string_view<CharT, Traits>(c_str(), size()).find_last_of(s, pos, count);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_of(const CharT * s, size_type pos) const
-	{
-		return find_last_of(s, pos, Traits::length(s));
-	}
-
-	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_of(CharT ch, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_of(CharT ch, size_type pos) const noexcept
 	{
 		return find_last_of(&ch, pos, 1);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_not_of(const std::basic_string<CharT, Traits, Allocator> & s, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_not_of(std::basic_string_view<CharT, Traits> s, size_type pos) const noexcept
 	{
-		return find_last_not_of(s.c_str(), pos, s.size());
+		return find_last_not_of(s.data(), pos, s.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_not_of(const CharT * s, size_type pos, size_type count) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_not_of(const CharT * s, size_type pos, size_type count) const noexcept
 	{
-		for (size_type i = size() - 1 - pos; i != npos; --i)
-			if (std::none_of(s, s + count, [&](CharT ch) { return Traits::eq(ch, data()[i]); }))
-				return i;
-		return npos;
+		return std::basic_string_view<CharT, Traits>(c_str(), size()).find_last_not_of(s, pos, count);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_not_of(const CharT * s, size_type pos) const
-	{
-		return find_last_not_of(s, pos, Traits::length(s));
-	}
-
-	template <typename CharT, typename Traits, typename Allocator>
-	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_not_of(CharT ch, size_type pos) const
+	typename basic_string_key<CharT, Traits, Allocator>::size_type basic_string_key<CharT, Traits, Allocator>::find_last_not_of(CharT ch, size_type pos) const noexcept
 	{
 		return find_last_not_of(&ch, pos, 1);
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	basic_string_key<CharT, Traits, Allocator>::operator std::basic_string<CharT, Traits, Allocator>() const
+	basic_string_key<CharT, Traits, Allocator>::operator std::basic_string_view<CharT, Traits>() const noexcept
 	{
-		return std::basic_string<CharT, Traits, Allocator>{ begin(), end(), get_allocator() };
+		return std::basic_string_view<CharT, Traits>(data(), size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
@@ -556,147 +506,137 @@ namespace json
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator == (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept
+	inline bool operator == (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept
 	{
-		return Traits::compare(a.c_str(), b, a.size() + 1) == 0;
+		return std::basic_string_view<CharT, Traits>(a.c_str(), a.size()) == b;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator != (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept
+	inline bool operator != (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept
 	{
-		return !(a == b);
+		return std::basic_string_view<CharT, Traits>(a.c_str(), a.size()) != b;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <  (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept
+	inline bool operator <  (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept
 	{
-		return Traits::compare(a.c_str(), b, a.size() + 1) < 0;
+		return std::basic_string_view<CharT, Traits>(a.c_str(), a.size()) < b;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <= (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept
+	inline bool operator <= (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept
 	{
-		return Traits::compare(a.c_str(), b, a.size() + 1) <= 0;
+		return std::basic_string_view<CharT, Traits>(a.c_str(), a.size()) <= b;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >  (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept
+	inline bool operator >  (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept
 	{
-		return Traits::compare(a.c_str(), b, a.size() + 1) > 0;
+		return std::basic_string_view<CharT, Traits>(a.c_str(), a.size()) > b;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept
+	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept
 	{
-		return Traits::compare(a.c_str(), b, a.size() + 1) >= 0;
+		return std::basic_string_view<CharT, Traits>(a.c_str(), a.size()) >= b;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator == (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
+	inline bool operator == (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
 		return b == a;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator != (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
+	inline bool operator != (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
 		return b != a;
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <  (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
+	inline bool operator <  (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return Traits::compare(a, b.c_str(), b.size() + 1) < 0;
+		return a < std::basic_string_view<CharT, Traits>(b.c_str(), b.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <= (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
+	inline bool operator <= (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return Traits::compare(a, b.c_str(), b.size() + 1) <= 0;
+		return a <= std::basic_string_view<CharT, Traits>(b.c_str(), b.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >  (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
+	inline bool operator >  (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return Traits::compare(a, b.c_str(), b.size() + 1) > 0;
+		return a > std::basic_string_view<CharT, Traits>(b.c_str(), b.size());
 	}
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >= (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
+	inline bool operator >= (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return Traits::compare(a, b.c_str(), b.size() + 1) >= 0;
+		return a >= std::basic_string_view<CharT, Traits>(b.c_str(), b.size());
 	}
 
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator == (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator == (const basic_string_key<CharT, Traits, Allocator> & a, StringT && b) noexcept
 	{
-		return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), b.end());
+		return a == std::basic_string_view<CharT, Traits>(b);
+	}
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator != (const basic_string_key<CharT, Traits, Allocator> & a, StringT && b) noexcept
+	{
+		return a != std::basic_string_view<CharT, Traits>(b);
+	}
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator <  (const basic_string_key<CharT, Traits, Allocator> & a, StringT && b) noexcept
+	{
+		return a < std::basic_string_view<CharT, Traits>(b);
+	}
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator <= (const basic_string_key<CharT, Traits, Allocator> & a, StringT && b) noexcept
+	{
+		return a <= std::basic_string_view<CharT, Traits>(b);
+	}
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator >  (const basic_string_key<CharT, Traits, Allocator> & a, StringT && b) noexcept
+	{
+		return a > std::basic_string_view<CharT, Traits>(b);
+	}
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator> & a, StringT && b) noexcept
+	{
+		return a >= std::basic_string_view<CharT, Traits>(b);
 	}
 
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator != (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator == (StringT && a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return !(a == b);
+		return std::basic_string_view<CharT, Traits>(a) == b;
 	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <  (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator != (StringT && a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return a < b.c_str();
+		return std::basic_string_view<CharT, Traits>(a) != b;
 	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <= (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator <  (StringT && a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return a <= b.c_str();
+		return std::basic_string_view<CharT, Traits>(a) < b;
 	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >  (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator <= (StringT && a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return a > b.c_str();
+		return std::basic_string_view<CharT, Traits>(a) <= b;
 	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator >  (StringT && a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return a >= b.c_str();
+		return std::basic_string_view<CharT, Traits>(a) > b;
 	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator == (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept
+	template <typename CharT, typename Traits, typename Allocator, typename StringT, typename = std::enable_if_t<std::is_convertible_v<StringT, std::basic_string_view<CharT, Traits>>>>
+	inline bool operator >= (StringT && a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept
 	{
-		return b == a;
-	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator != (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept
-	{
-		return !(a == b);
-	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <  (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept
-	{
-		return a.c_str() < b;
-	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <= (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept
-	{
-		return a.c_str() <= b;
-	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >  (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept
-	{
-		return a.c_str() > b;
-	}
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >= (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept
-	{
-		return a.c_str() >= b;
+		return std::basic_string_view<CharT, Traits>(a) >= b;
 	}
 
 	inline namespace literals

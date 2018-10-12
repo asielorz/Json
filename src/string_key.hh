@@ -4,6 +4,7 @@
 #include "config.hh"
 #include "release.hh"
 #include <algorithm> // search, find_first_of, lexicographical_compare
+#include <string_view>
 
 namespace json
 {
@@ -29,6 +30,9 @@ namespace json
 
 		//! Returns the length of the string, without counting the null temrinator.
 		constexpr size_t size() const noexcept;
+
+		//! Conversion to string view
+		constexpr operator std::basic_string_view<CharT, Traits>() const noexcept;
 
 	private:
 		const CharT * str;
@@ -74,9 +78,11 @@ namespace json
 		static constexpr size_type npos = static_cast<size_type>(-1);
 
 		//! Constructs a string_key from a character array. The array is copied. Size is computed by Traits::size(s)
-		basic_string_key(const CharT * s, const Allocator & a = Allocator{});
+		basic_string_key(const CharT * s, const Allocator & a = Allocator());
 		//! Constructs a string_key from a std::basic_string
 		basic_string_key(const std::basic_string<CharT, Traits, Allocator> & s);
+		//! Constructs a string_key from a std::basic_string_view
+		basic_string_key(std::basic_string_view<CharT, Traits> s, const Allocator & a = Allocator());
 		//! Constructs a string_key from a std::basic_string and a custom allocator
 		template <typename OtherAllocator>
 		basic_string_key(const std::basic_string<CharT, Traits, OtherAllocator> & s, const Allocator & a);
@@ -142,64 +148,52 @@ namespace json
 		bool is_view() const noexcept;
 
 		//! Returns a substring [pos, pos + count) or [pos, size()) if the requested substring extends past the end of the string
-		std::basic_string<CharT, Traits, Allocator> substr(size_type pos = 0, size_type count = npos) const;
+		std::basic_string_view<CharT, Traits> substr(size_type pos = 0, size_type count = npos) const noexcept;
 
 		//! Finds the first substring equal to the given character sequence. Search begins at pos
-		size_type find(const std::basic_string<CharT, Traits, Allocator> & str, size_type pos = 0) const;
+		size_type find(std::basic_string_view<CharT, Traits> str, size_type pos = 0) const noexcept;
 		//! Finds the first substring equal to the given character sequence. Search begins at pos
-		size_type find(const CharT * s, size_type pos, size_type count) const;
+		size_type find(const CharT * s, size_type pos, size_type count) const noexcept;
 		//! Finds the first substring equal to the given character sequence. Search begins at pos
-		size_type find(const CharT * s, size_type pos = 0) const;
-		//! Finds the first substring equal to the given character sequence. Search begins at pos
-		size_type find(CharT ch, size_type pos = 0) const;
+		size_type find(CharT ch, size_type pos = 0) const noexcept;
 
 		//! Finds the last substring equal to the given character sequence. Search begins at pos
-		size_type rfind(const std::basic_string<CharT, Traits, Allocator> & str, size_type pos = 0) const;
+		size_type rfind(std::basic_string_view<CharT, Traits> str, size_type pos = npos) const noexcept;
 		//! Finds the last substring equal to the given character sequence. Search begins at pos
-		size_type rfind(const CharT * s, size_type pos, size_type count) const;
+		size_type rfind(const CharT * s, size_type pos, size_type count) const noexcept;
 		//! Finds the last substring equal to the given character sequence. Search begins at pos
-		size_type rfind(const CharT * s, size_type pos = 0) const;
-		//! Finds the last substring equal to the given character sequence. Search begins at pos
-		size_type rfind(CharT ch, size_type pos = 0) const;
+		size_type rfind(CharT ch, size_type pos = npos) const noexcept;
 
 		//! Finds the first character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_first_of(const std::basic_string<CharT, Traits, Allocator> & str, size_type pos = 0) const;
+		size_type find_first_of(std::basic_string_view<CharT, Traits> str, size_type pos = 0) const noexcept;
 		//! Finds the first character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_first_of(const CharT * s, size_type pos, size_type count) const;
+		size_type find_first_of(const CharT * s, size_type pos, size_type count) const noexcept;
 		//! Finds the first character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_first_of(const CharT * s, size_type pos = 0) const;
-		//! Finds the first character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_first_of(CharT ch, size_type pos = 0) const;
+		size_type find_first_of(CharT ch, size_type pos = 0) const noexcept;
 
 		//! Finds the first character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_first_not_of(const std::basic_string<CharT, Traits, Allocator> & str, size_type pos = 0) const;
+		size_type find_first_not_of(std::basic_string_view<CharT, Traits> str, size_type pos = 0) const noexcept;
 		//! Finds the first character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_first_not_of(const CharT * s, size_type pos, size_type count) const;
+		size_type find_first_not_of(const CharT * s, size_type pos, size_type count) const noexcept;
 		//! Finds the first character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_first_not_of(const CharT * s, size_type pos = 0) const;
-		//! Finds the first character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_first_not_of(CharT ch, size_type pos = 0) const;
+		size_type find_first_not_of(CharT ch, size_type pos = 0) const noexcept;
 
 		//! Finds the last character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_last_of(const std::basic_string<CharT, Traits, Allocator> & str, size_type pos = 0) const;
+		size_type find_last_of(std::basic_string_view<CharT, Traits> str, size_type pos = npos) const noexcept;
 		//! Finds the last character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_last_of(const CharT * s, size_type pos, size_type count) const;
+		size_type find_last_of(const CharT * s, size_type pos, size_type count) const noexcept;
 		//! Finds the last character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_last_of(const CharT * s, size_type pos = 0) const;
-		//! Finds the last character equal to any of the characters in the given sequence. Search begins at pos
-		size_type find_last_of(CharT ch, size_type pos = 0) const;
+		size_type find_last_of(CharT ch, size_type pos = npos) const noexcept;
 
 		//! Finds the last character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_last_not_of(const std::basic_string<CharT, Traits, Allocator> & str, size_type pos = 0) const;
+		size_type find_last_not_of(std::basic_string_view<CharT, Traits> str, size_type pos = npos) const noexcept;
 		//! Finds the last character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_last_not_of(const CharT * s, size_type pos, size_type count) const;
+		size_type find_last_not_of(const CharT * s, size_type pos, size_type count) const noexcept;
 		//! Finds the last character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_last_not_of(const CharT * s, size_type pos = 0) const;
-		//! Finds the last character equal to none of the characters in the given sequence. Search begins at pos
-		size_type find_last_not_of(CharT ch, size_type pos = 0) const;
+		size_type find_last_not_of(CharT ch, size_type pos = npos) const noexcept;
 
 		//! Conversion to std::basic_string
-		explicit operator std::basic_string<CharT, Traits, Allocator>() const;
+		operator std::basic_string_view<CharT, Traits>() const noexcept;
 
 	private:
 		//! True if the string is owned by the object, this is, if it's not a static string
@@ -253,59 +247,32 @@ namespace json
 	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
 	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept;
 
-	//! Overload of comparison operators for c strings
+	//! Overload of comparison operators for string view
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator == (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept;
+	inline bool operator == (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator != (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept;
+	inline bool operator != (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <  (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept;
+	inline bool operator <  (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <= (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept;
+	inline bool operator <= (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >  (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept;
+	inline bool operator >  (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator> & a, const CharT * b) noexcept;
+	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator> & a, std::basic_string_view<CharT, Traits> b) noexcept;
 
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator == (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
+	inline bool operator == (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator != (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
+	inline bool operator != (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <  (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
+	inline bool operator <  (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator <= (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
+	inline bool operator <= (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >  (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
+	inline bool operator >  (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
 	template <typename CharT, typename Traits, typename Allocator>
-	inline bool operator >= (const CharT * a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
-
-	//! Overload of comparison operators for std::basic_string
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator == (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator != (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <  (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <= (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >  (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >= (const basic_string_key<CharT, Traits, Allocator1> & a, const std::basic_string<CharT, Traits, Allocator2> & b) noexcept;
-
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator == (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator != (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <  (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator <= (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >  (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept;
-	template <typename CharT, typename Traits, typename Allocator1, typename Allocator2>
-	inline bool operator >= (const std::basic_string<CharT, Traits, Allocator1> & a, const basic_string_key<CharT, Traits, Allocator2> & b) noexcept;
+	inline bool operator >= (std::basic_string_view<CharT, Traits> a, const basic_string_key<CharT, Traits, Allocator> & b) noexcept;
 
 	//! Typedef for basic_string_key of chars (the same way std::string is std::basic_string<char>)
 	using string_key = basic_string_key<char>;

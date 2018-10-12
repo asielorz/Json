@@ -496,15 +496,18 @@ namespace json
 
 			// Converts the range of characters [begin, end) representing an integral number to the value it represents
 			template <typename CharForwardIterator>
-			int string_to_int(CharForwardIterator begin, CharForwardIterator end)
+			int64_t string_to_int(CharForwardIterator begin, CharForwardIterator end)
 			{
 				// Using ptrdiff_t instead of size_t to avoid signed/unsigned mismatch warning on the comparison of the assertion
 				constexpr ptrdiff_t buffer_size = 32;
-				assert(std::distance(begin, end) < buffer_size);
+				const auto string_size = std::distance(begin, end);
+				assert(string_size < buffer_size);
 
 				char buffer[buffer_size] = { 0 };
 				std::copy(begin, end, buffer);
-				return atoi(buffer);
+				int64_t value;
+				std::from_chars(buffer, buffer + string_size, value);
+				return value;
 			}
 
 			// Converts the range of characters [begin, end) representing a real number to the value it represents

@@ -6,6 +6,8 @@
 #include <stdexcept> // std::runtime_error
 #include <cassert> // assert
 #include <iterator> // std::back_inserter
+#include <string_view> // std::string_view
+#include <charconv> // std::from_chars
 
 namespace json
 {
@@ -65,13 +67,7 @@ namespace json
 		json::vector<token<CharForwardIterator>> tokenize(CharForwardIterator begin, CharForwardIterator end);
 		//! Parses the whole string until a null character is found
 		//! Same as tokenize(source, source + strlen(source))
-		JSON_API json::vector<token<const char *>> tokenize(const char * source);
-		//! Parses the string [source.begin(), source.end())
-		//! Same as tokenize(source.c_str(), source.c_str() + source.size())
-		JSON_API json::vector<token<const char *>> tokenize(const json::string & source);
-		//! Tokens hold references to the source string so tokenizing a temporary string
-		//! is explicitly forbidden
-		JSON_API json::vector<token<const char *>> tokenize(const json::string && source) = delete;
+		JSON_API json::vector<token<const char *>> tokenize(std::string_view source);
 
 		//! Builds a value from a sequence of tokens represented by the range [begin, end)
 		//! TokenForwardIterator must satisfy ForwardIterator
@@ -88,9 +84,7 @@ namespace json
 		template <typename CharForwardIterator>
 		json::value parse(CharForwardIterator begin, CharForwardIterator end);
 		//! Same as parse(source, source + strlen(source))
-		JSON_API json::value parse(const char * source);
-		//! Same as parse(source.c_str(), source.c_str() + source.size())
-		JSON_API json::value parse(const json::string & source);
+		JSON_API json::value parse(std::string_view source);
 		//! Reads the whole stream, then parses that
 		JSON_API json::value parse(std::istream & is);
 
@@ -183,7 +177,7 @@ namespace json
 
 			//! Converts the range of characters [begin, end) representing an integral number to the value it represents
 			template <typename CharForwardIterator>
-			int string_to_int(CharForwardIterator begin, CharForwardIterator end);
+			int64_t string_to_int(CharForwardIterator begin, CharForwardIterator end);
 
 			//! Converts the range of characters [begin, end) representing a real number to the value it represents
 			template <typename CharForwardIterator>

@@ -77,7 +77,7 @@ namespace json
 		: stored_value(std::in_place_type<json::object>, list)
 	{}
 
-	value::value(value_type type)
+	value::value(value_type type) noexcept
 	{
 		switch (type)
 		{
@@ -213,7 +213,7 @@ namespace json
 	//*************************************************************************************************
 	// Comparison
 
-	bool value::operator < (const value & other) const
+	bool value::operator < (const value & other) const noexcept
 	{
 		if (is_numeric() && other.is_numeric())
 			return as_double() < other.as_double();
@@ -226,20 +226,23 @@ namespace json
 		else if (is_object() && other.is_object())
 			return as_object() < other.as_object();
 		else
-			throw invalid_operation{ "Value not compatible with operator <" };
+		{
+			assert(false);
+			return false;
+		}
 	}
 
-	bool value::operator <= (const value & other) const
+	bool value::operator <= (const value & other) const noexcept
 	{
 		return other >= *this;
 	}
 
-	bool value::operator >= (const value & other) const
+	bool value::operator >= (const value & other) const noexcept
 	{
 		return !(*this < other);
 	}
 
-	bool value::operator >  (const value & other) const
+	bool value::operator >  (const value & other) const noexcept
 	{
 		return !(*this <= other);
 	}
@@ -257,177 +260,147 @@ namespace json
 	//*************************************************************************************************
 	// Gettors
 
-	int value::as_int() const
+	int value::as_int() const noexcept
 	{
+		assert(is_numeric());
 		if (is_int())
 			return static_cast<int>(std::get<int64_t>(stored_value));
 		else if (is_real())
 			return static_cast<int>(std::get<double>(stored_value));
 		else
-			throw invalid_operation("Value not compatible with as_int");
+		{
+			assert(false);
+			return 0;
+		}
 	}
 
-	unsigned value::as_uint() const
+	unsigned value::as_uint() const noexcept
 	{
+		assert(is_numeric());
 		if (is_int())
 			return static_cast<unsigned>(std::get<int64_t>(stored_value));
-		else if (is_real())
-			return static_cast<unsigned>(std::get<double>(stored_value));
 		else
-			throw invalid_operation{ "Value not compatible with as_uint" };
+			return static_cast<unsigned>(std::get<double>(stored_value));
 	}
 
-	int64_t value::as_int64() const
+	int64_t value::as_int64() const noexcept
 	{
+		assert(is_numeric());
 		if (is_int())
 			return std::get<int64_t>(stored_value);
-		else if (is_real())
-			return static_cast<int64_t>(std::get<double>(stored_value));
 		else
-			throw invalid_operation{ "Value not compatible with as_int64" };
+			return static_cast<int64_t>(std::get<double>(stored_value));
 	}
 
-	uint64_t value::as_uint64() const
+	uint64_t value::as_uint64() const noexcept
 	{
+		assert(is_numeric());
 		if (is_int())
 			return static_cast<uint64_t>(std::get<int64_t>(stored_value));
-		else if (is_real())
-			return static_cast<uint64_t>(std::get<double>(stored_value));
 		else
-			throw invalid_operation{ "Value not compatible with as_uint64" };
+			return static_cast<uint64_t>(std::get<double>(stored_value));
 	}
 
-	float value::as_float() const
+	float value::as_float() const noexcept
 	{
+		assert(is_numeric());
 		if (is_real())
 			return static_cast<float>(std::get<double>(stored_value));
-		else if (is_int())
+		else
 			return static_cast<float>(std::get<int64_t>(stored_value));
-		else
-			throw invalid_operation{ "Value not compatible with as_double" };
 	}
 
-	double value::as_double() const
+	double value::as_double() const noexcept
 	{
+		assert(is_numeric());
 		if (is_real())
 			return std::get<double>(stored_value);
-		else if (is_int())
+		else
 			return static_cast<double>(std::get<int64_t>(stored_value));
-		else
-			throw invalid_operation{ "Value not compatible with as_double" };
-
 	}
 
-	bool value::as_bool() const
+	bool value::as_bool() const noexcept
 	{
-		if (is_bool())
-			return std::get<bool>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with as_bool" };
+		assert(is_bool());
+		return std::get<bool>(stored_value);
 	}
 
-	const char * value::as_c_string() const
+	const char * value::as_c_string() const noexcept
 	{
-		if (is_string())
-			return std::get<json::string>(stored_value).c_str();
-		else
-			throw invalid_operation{ "Value not compatible with as_c_string" };
+		assert(is_string());
+		return std::get<json::string>(stored_value).c_str();
 	}
 
-	json::string & value::as_string()
+	json::string & value::as_string() noexcept
 	{
-		if (is_string())
-			return std::get<json::string>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with as_string" };
+		assert(is_string());
+		return std::get<json::string>(stored_value);
 	}
 
-	const json::string & value::as_string() const
+	const json::string & value::as_string() const noexcept
 	{
-		if (is_string())
-			return std::get<json::string>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with as_string" };
+		assert(is_string());
+		return std::get<json::string>(stored_value);
 	}
 
-	json::array & value::as_array()
+	json::array & value::as_array() noexcept
 	{
-		if (is_array())
-			return std::get<json::array>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with as_array" };
+		assert(is_array());
+		return std::get<json::array>(stored_value);
 	}
 
-	const json::array & value::as_array() const
+	const json::array & value::as_array() const noexcept
 	{
-		if (is_array())
-			return std::get<json::array>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with as_array" };
+		assert(is_array());
+		return std::get<json::array>(stored_value);
 	}
 
-	json::object & value::as_object()
+	json::object & value::as_object() noexcept
 	{
-		if (is_object())
-			return std::get<json::object>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with as_object" };
+		assert(is_object());
+		return std::get<json::object>(stored_value);
 	}
 
-	const json::object & value::as_object() const
+	const json::object & value::as_object() const noexcept
 	{
-		if (is_object())
-			return std::get<json::object>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with as_object" };
+		assert(is_object());
+		return std::get<json::object>(stored_value);
 	}
 
-	int64_t & value::stored_int()
+	int64_t & value::stored_int() noexcept
 	{
-		if (is_int())
-			return std::get<int64_t>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with stored_int" };
+		assert(is_int());
+		return std::get<int64_t>(stored_value);
 	}
 
-	const int64_t & value::stored_int() const
+	const int64_t & value::stored_int() const noexcept
 	{
-		if (is_int())
-			return std::get<int64_t>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with stored_int" };
+		assert(is_int());
+		return std::get<int64_t>(stored_value);
 	}
 
-	double & value::stored_double()
+	double & value::stored_double() noexcept
 	{
-		if (is_real())
-			return std::get<double>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with stored_double" };
+		assert(is_real());
+		return std::get<double>(stored_value);
 	}
 
-	const double & value::stored_double() const
+	const double & value::stored_double() const noexcept
 	{
-		if (is_real())
-			return std::get<double>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with stored_double" };
+		assert(is_real());
+		return std::get<double>(stored_value);
 	}
 
-	bool & value::stored_bool()
+	bool & value::stored_bool() noexcept
 	{
-		if (is_real())
-			return std::get<bool>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with stored_bool" };
+		assert(is_bool());
+		return std::get<bool>(stored_value);
 	}
 
-	const bool & value::stored_bool() const
+	const bool & value::stored_bool() const noexcept
 	{
-		if (is_real())
-			return std::get<bool>(stored_value);
-		else
-			throw invalid_operation{ "Value not compatible with stored_bool" };
+		assert(is_bool());
+		return std::get<bool>(stored_value);
 	}
 
 	//*************************************************************************************************

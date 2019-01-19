@@ -268,14 +268,6 @@ TEST(operator_equal)
 
 	debug_assert(v4 == v4);
 	debug_assert(v4 != v5);
-
-	try
-	{
-		debug_assert(v1 < v4); // This should throw
-		debug_assert(false);
-	}
-	catch (const std::exception &)
-	{}
 }
 
 TEST(object_constructor_from_initializer_list_of_pairs)
@@ -344,17 +336,6 @@ TEST(const_operator_subscript_returns_null_reference_on_failure)
 
 	const auto & v1 = v.as_object()["This will fail"];
 	debug_assert(v1.is_null());
-
-	try
-	{
-		const json::value vi = 4;
-
-		const auto & v3 = vi.as_object()["This will throw"];
-		static_cast<void>(v3);
-		debug_assert(false);
-	}
-	catch(const std::exception &)
-	{}
 }
 
 TEST(mutable_operator_subscript_inserts_new_element_on_failure)
@@ -2031,3 +2012,4 @@ TEST(can_correctly_serialize_an_int_that_doesnt_fit_in_4_bytes)
 	int64_t i2 = json::parser::parse(json::writer::write(json::value(i))).as_int64();
 	debug_assert(i == i2);
 }
+

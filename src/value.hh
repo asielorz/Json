@@ -22,16 +22,6 @@ namespace json
 		object  = 6
 	};
 
-	//! Thrown when trying to access a value as a type different to its own (eg: using as_int on an array type)
-	//! or when comparing for inequality two values of different types
-	class invalid_operation : public std::logic_error
-	{
-	public:
-		invalid_operation(const char * msg)
-			: logic_error{ msg }
-		{}
-	};
-
 	class value;
 
 	//! Data structure representing a json array. An array is an ordered collection of values. An array begins with [ (left bracket)
@@ -239,7 +229,7 @@ namespace json
 		//!		- string = ""
 		//!		- empty array
 		//!		- empty object
-		explicit value(value_type type);
+		explicit value(value_type type) noexcept;
 
 		//! Convert the value to integer, then assigns v
 		value & operator = (int v) noexcept;
@@ -273,65 +263,65 @@ namespace json
 		//! Swaps the content of two values
 		void swap(value & other) noexcept;
 
-		//! True if both are the same type and this is less than other. Invalid operation if different type
-		bool operator <  (const value & other) const;
-		//! True if both are the same type and this is less than or equal to other. Invalid operation if different type
-		bool operator <= (const value & other) const;
-		//! True if both are the same type and this is greater than or equal to other. Invalid operation if different type
-		bool operator >= (const value & other) const;
-		//! True if both are the same type and this is greater than other. Invalid operation if different type
-		bool operator >  (const value & other) const;
+		//! True if both are the same type and this is less than other. Assertion failure if different type
+		bool operator <  (const value & other) const noexcept;
+		//! True if both are the same type and this is less than or equal to other. Assertion failure if different type
+		bool operator <= (const value & other) const noexcept;
+		//! True if both are the same type and this is greater than or equal to other. Assertion failure if different type
+		bool operator >= (const value & other) const noexcept;
+		//! True if both are the same type and this is greater than other. Assertion failure if different type
+		bool operator >  (const value & other) const noexcept;
 		//! True if both are the same type and values compare equal. False otherwise
 		bool operator == (const value & other) const noexcept;
 		//! True if both are of different types or if their values don't compare equal
 		bool operator != (const value & other) const noexcept;
 
-		//! If numeric, returns the value casted to int. Invalid operation otherwise
-		int as_int() const;
-		//! If numeric, returns the value casted to unsigned. Invalid operation otherwise
-		unsigned as_uint() const;
-		//! If numeric, returns the value casted to int64_t. Invalid operation otherwise
-		int64_t as_int64() const;
-		//! If numeric, returns the value casted to uint64_t. Invalid operation otherwise
-		uint64_t as_uint64() const;
-		//! If numeric, returns the value casted to float. Invalid operation otherwise
-		float as_float() const;
-		//! If numeric, returns the value casted to double. Invalid operation otherwise
-		double as_double() const;
-		//! If boolean, returns the value. Invalid operation otherwise
-		bool as_bool() const;
-		//! If string, returns a pointer to the stored character array. Invalid operation otherwise
-		const char * as_c_string() const;
+		//! If numeric, returns the value casted to int. Assertion failure otherwise
+		int as_int() const noexcept;
+		//! If numeric, returns the value casted to unsigned. Assertion failure otherwise
+		unsigned as_uint() const noexcept;
+		//! If numeric, returns the value casted to int64_t. Assertion failure otherwise
+		int64_t as_int64() const noexcept;
+		//! If numeric, returns the value casted to uint64_t. Assertion failure otherwise
+		uint64_t as_uint64() const noexcept;
+		//! If numeric, returns the value casted to float. Assertion failure otherwise
+		float as_float() const noexcept;
+		//! If numeric, returns the value casted to double. Assertion failure otherwise
+		double as_double() const noexcept;
+		//! If boolean, returns the value. Assertion failure otherwise
+		bool as_bool() const noexcept;
+		//! If string, returns a pointer to the stored character array. Assertion failure otherwise
+		const char * as_c_string() const noexcept;
 
-		//! If string, returns a reference to the stored string. Invalid operation otherwise
-		json::string & as_string();
-		//! If string, returns a reference to the stored string. Invalid operation otherwise
-		const json::string & as_string() const;
+		//! If string, returns a reference to the stored string. Assertion failure otherwise
+		json::string & as_string() noexcept;
+		//! If string, returns a reference to the stored string. Assertion failure otherwise
+		const json::string & as_string() const noexcept;
 
-		//! If array, returns a reference to the stored array. Invalid operation otherwise
-		json::array & as_array();
-		//! If array, returns a reference to the stored array. Invalid operation otherwise
-		const json::array & as_array() const;
+		//! If array, returns a reference to the stored array. Assertion failure otherwise
+		json::array & as_array() noexcept;
+		//! If array, returns a reference to the stored array. Assertion failure otherwise
+		const json::array & as_array() const noexcept;
 
-		//! If object, returns a reference to the stored object. Invalid operation otherwise
-		json::object & as_object();
-		//! If object, returns a reference to the stored object. Invalid operation otherwise
-		const json::object & as_object() const;
+		//! If object, returns a reference to the stored object. Assertion failure otherwise
+		json::object & as_object() noexcept;
+		//! If object, returns a reference to the stored object. Assertion failure otherwise
+		const json::object & as_object() const noexcept;
 
-		//! If integer, returns a reference to the stored int64_t. Invalid operation otherwise
-		int64_t & stored_int();
-		//! If integer, returns a reference to the stored int64_t. Invalid operation otherwise
-		const int64_t & stored_int() const;
+		//! If integer, returns a reference to the stored int64_t. Assertion failure otherwise
+		int64_t & stored_int() noexcept;
+		//! If integer, returns a reference to the stored int64_t. Assertion failure otherwise
+		const int64_t & stored_int() const noexcept;
 
-		//! If real, returns a reference to the stored double. Invalid operation otherwise
-		double & stored_double();
-		//! If real, returns a reference to the stored double. Invalid operation otherwise
-		const double & stored_double() const;
+		//! If real, returns a reference to the stored double. Assertion failure otherwise
+		double & stored_double() noexcept;
+		//! If real, returns a reference to the stored double. Assertion failure otherwise
+		const double & stored_double() const noexcept;
 
-		//! If boolean, returns a reference to the stored bool. Invalid operation otherwise
-		bool & stored_bool();
-		//! If boolean, returns a reference to the stored bool. Invalid operation otherwise
-		const bool & stored_bool() const;
+		//! If boolean, returns a reference to the stored bool. Assertion failure otherwise
+		bool & stored_bool() noexcept;
+		//! If boolean, returns a reference to the stored bool. Assertion failure otherwise
+		const bool & stored_bool() const noexcept;
 
 		//! True if type is null
 		bool is_null() const noexcept;
